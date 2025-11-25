@@ -4,7 +4,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogOut, Copy, Check } from "lucide-react";
+import { LogOut, Copy, Check, User as UserIcon } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -93,7 +93,7 @@ const Index = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             StudyTracker
           </h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {profile && (
               <Card className="px-4 py-2 flex items-center gap-2 border-border/50">
                 <div>
@@ -114,6 +114,14 @@ const Index = () => {
                 </Button>
               </Card>
             )}
+            <Button
+              variant="outline"
+              onClick={() => navigate("/profile")}
+              className="border-border/50 hover:bg-primary/10 hover:border-primary/50"
+            >
+              <UserIcon className="mr-2 h-4 w-4" />
+              Profile
+            </Button>
             <Button
               variant="outline"
               onClick={handleSignOut}
