@@ -5,11 +5,14 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogOut, Copy, Check, User as UserIcon } from "lucide-react";
+import { LogOut, Copy, Check, User as UserIcon, Flame } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
+import StreakDisplay from "@/components/StreakDisplay";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
+import { calculateStreak } from "@/lib/streak";
 
 interface Subject {
   id: string;
@@ -79,6 +82,10 @@ const Index = () => {
           phone: null,
           student_code: studentCode,
           created_at: new Date().getTime(),
+          current_streak: 0,
+          longest_streak: 0,
+          last_study_date: null,
+          theme: 'light',
         };
         await setDoc(docRef, defaultProfile);
         console.log('Default profile created:', defaultProfile);
@@ -133,6 +140,7 @@ const Index = () => {
             StudyTracker
           </h1>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             {profile ? (
               <Card className="px-4 py-2 flex items-center gap-2 border-border/50">
                 <div>
@@ -177,6 +185,12 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
+            {profile && (
+              <StreakDisplay 
+                currentStreak={profile.current_streak || 0}
+                longestStreak={profile.longest_streak || 0}
+              />
+            )}
             <StudyTimer
               userId={user.uid}
               subjectId={selectedSubject?.id}

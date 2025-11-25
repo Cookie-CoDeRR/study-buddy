@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Copy, Check } from "lucide-react";
+import { ProfilePictureUploader } from "@/components/ProfilePictureUploader";
+import { uploadProfilePicture, deleteProfilePicture } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
@@ -85,6 +87,34 @@ const Profile = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+
+    const url = await uploadProfilePicture(user.uid, file);
+
+    // Save the URL to the profile
+    const docRef = doc(db, 'profiles', user.uid);
+    await setDoc(docRef, {
+      profile_picture_url: url,
+    }, { merge: true });
+
+    return url;
+  };
+
+  const handleProfilePictureDelete = async () => {
+    if (!user || !profile?.profile_picture_url) return;
+
+    await deleteProfilePicture(user.uid, profile.profile_picture_url);
+
+    // Remove the URL from the profile
+    const docRef = doc(db, 'profiles', user.uid);
+    await setDoc(docRef, {
+      profile_picture_url: null,
+    }, { merge: true });
+
+    await fetchProfile(user.uid);
+  };
+
   const copyStudentCode = () => {
     if (profile?.student_code) {
       navigator.clipboard.writeText(profile.student_code);
@@ -124,6 +154,14 @@ const Profile = () => {
               Update your personal information
             </p>
           </div>
+
+          <ProfilePictureUploader
+            userId={user.uid}
+            currentImage={profile?.profile_picture_url}
+            fullName={fullName || user.email}
+            onUpload={handleProfilePictureUpload}
+            onDelete={handleProfilePictureDelete}
+          />
 
           <Card className="border-border/50 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">

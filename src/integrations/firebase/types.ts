@@ -6,6 +6,17 @@ export interface Profile {
   phone: string | null;
   student_code: string;
   created_at: number;
+  // Streak tracking
+  current_streak: number;
+  longest_streak: number;
+  last_study_date: string | null; // YYYY-MM-DD format
+  // Profile picture
+  profile_picture_url?: string | null;
+  // Study goals
+  daily_goal_minutes?: number;
+  weekly_goal_minutes?: number;
+  // Theme preference
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export interface Subject {
@@ -27,4 +38,14 @@ export interface StudySession {
   date: string;
   notes?: string | null;
   created_at: number;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  subject_id: string | null;
+  goal_type: 'daily' | 'weekly' | 'monthly';
+  target_minutes: number;
+  created_at: number;
+  updated_at: number;
 }

@@ -121,29 +121,29 @@ const SubjectManager = ({ userId, onSelectSubject, selectedSubject }: SubjectMan
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 border-border/50">
+      <Card className="p-6 border-border/50 shadow-xl hover-lift transition-smooth animate-slide-up">
         <h3 className="text-lg font-semibold mb-4">Add New Subject</h3>
         <form onSubmit={addSubject} className="space-y-4">
           <Input
             placeholder="Subject name"
             value={newSubjectName}
             onChange={(e) => setNewSubjectName(e.target.value)}
-            className="border-border/50"
+            className="border-border/50 transition-smooth"
           />
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap animate-stagger">
             {PRESET_COLORS.map((color) => (
               <button
                 key={color}
                 type="button"
                 onClick={() => setSelectedColor(color)}
-                className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                  selectedColor === color ? "border-foreground scale-110" : "border-transparent"
+                className={`w-10 h-10 rounded-lg border-2 transition-smooth hover:scale-125 active:scale-90 ${
+                  selectedColor === color ? "border-foreground scale-110 ring-2 ring-offset-2 ring-offset-background" : "border-transparent"
                 }`}
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 transition-smooth hover:scale-105 active:scale-95">
             <Plus className="mr-2 h-4 w-4" />
             Add Subject
           </Button>
@@ -157,12 +157,12 @@ const SubjectManager = ({ userId, onSelectSubject, selectedSubject }: SubjectMan
             No subjects yet. Add your first subject above!
           </Card>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-3 animate-stagger">
             {subjects.map((subject) => (
               <Card
                 key={subject.id}
-                className={`p-4 flex items-center justify-between cursor-pointer transition-all border-border/50 hover:shadow-md ${
-                  selectedSubject?.id === subject.id ? "ring-2 ring-primary shadow-lg" : ""
+                className={`p-4 flex items-center justify-between cursor-pointer transition-smooth hover-lift border-border/50 ${
+                  selectedSubject?.id === subject.id ? "ring-2 ring-primary shadow-lg scale-105" : "hover:scale-105"
                 }`}
                 onClick={() => onSelectSubject(subject)}
               >
@@ -180,7 +180,7 @@ const SubjectManager = ({ userId, onSelectSubject, selectedSubject }: SubjectMan
                     e.stopPropagation();
                     deleteSubject(subject.id);
                   }}
-                  className="hover:bg-destructive/10 hover:text-destructive"
+                  className="hover:bg-destructive/10 hover:text-destructive transition-smooth hover:scale-110 active:scale-90"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

@@ -5,11 +5,15 @@ A modern study session tracking application built with React, Firebase, and Tail
 ## Features
 
 - **User Authentication**: Secure email/password authentication with Firebase Auth
+- **Profile Management**: Upload and manage profile pictures with avatar fallback
 - **Study Session Tracking**: Record study sessions with start/end times and duration
 - **Subject Management**: Create and organize subjects with custom colors
 - **Break Mode**: Track break times separately from study sessions
 - **Real-time Statistics**: View today's study time, total study time, and total breaks
 - **Unique Student Codes**: Each user receives an auto-generated unique student code for identification
+- **Study Streak Tracking**: Track consecutive days of studying with current and all-time streaks
+- **Pomodoro Timer Presets**: Quick access to preset timers (15min, 25min, 50min study sessions and 5min, 15min breaks)
+- **Dark/Light Theme Toggle**: System theme detection with manual light/dark/system mode selection
 - **Responsive Design**: Fully responsive UI built with Tailwind CSS and shadcn/ui components
 - **Real-time Updates**: Live Firestore listeners for instant data synchronization
 
@@ -36,17 +40,21 @@ src/
 │   ├── Profile.tsx    # User profile management
 │   └── NotFound.tsx   # 404 page
 ├── components/        # Reusable components
-│   ├── StudyTimer.tsx        # Timer component for study/break sessions
+│   ├── StudyTimer.tsx        # Timer with Pomodoro presets
 │   ├── StudyHistory.tsx      # Recent sessions display
 │   ├── SubjectManager.tsx    # Subject creation and management
+│   ├── StreakDisplay.tsx     # Current and longest streak display
+│   ├── ThemeToggle.tsx       # Theme switcher component
 │   ├── NavLink.tsx           # Navigation link component
 │   └── ui/                   # shadcn/ui components
+├── contexts/
+│   └── ThemeContext.tsx      # Dark/Light theme context provider
 ├── integrations/
 │   └── firebase/
 │       ├── client.ts         # Firebase initialization
 │       └── types.ts          # TypeScript types for Firestore documents
 ├── hooks/              # Custom React hooks
-├── lib/               # Utility functions
+├── lib/                # Utility functions (includes streak.ts)
 └── App.tsx            # Main app component
 ```
 
@@ -74,9 +82,21 @@ src/
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
    - Enable Firestore Database (Production mode)
    - Enable Email/Password authentication
+   - Enable Storage (for profile pictures)
    - Create composite indexes for the following queries:
      - `subjects`: `user_id` (Asc) + `created_at` (Desc)
      - `study_sessions`: `user_id` (Asc) + `start_time` (Desc)
+   - Set Storage Rules to allow authenticated users to read/write their own files:
+     ```firestore
+     rules_version = '2';
+     service firebase.storage {
+       match /b/{bucket}/o {
+         match /profile-pictures/{userId}/{allPaths=**} {
+           allow read, write: if request.auth.uid == userId;
+         }
+       }
+     }
+     ```
 
 4. **Configure environment variables**
    Create a `.env` file in the project root:
@@ -138,8 +158,13 @@ src/
   - `user_id` (string) - User's Firebase UID
   - `full_name` (string | null) - User's full name
   - `phone` (string | null) - User's phone number
+  - `profile_picture_url` (string | null) - URL to user's profile picture in Firebase Storage
   - `student_code` (string) - Unique identifier (auto-generated)
   - `created_at` (number) - Timestamp in milliseconds
+  - `current_streak` (number) - Current consecutive days studied
+  - `longest_streak` (number) - All-time longest streak
+  - `last_study_date` (string | null) - Last study date in YYYY-MM-DD format
+  - `theme` (string) - Theme preference ('light' | 'dark' | 'system')
 
 #### `subjects`
 - Document ID: Auto-generated
@@ -249,11 +274,14 @@ For issues or questions:
 
 ## Roadmap
 
-Future features planned:
-- Study goals and targets
-- Weekly study reports
-- Study streak tracking
-- Subject-specific analytics
-- Pomodoro timer preset
-- Dark/Light theme toggle
-- Mobile app (React Native)
+### ✅ Completed Features
+- Study streak tracking with current/all-time display
+- Pomodoro timer presets (15/25/50 min study, 5/15 min breaks)
+- Dark/Light theme toggle with system detection
+- Profile picture upload with avatar initials fallback
+
+### 🚀 Upcoming Features
+- Study goals and targets (daily/weekly goals per subject)
+- Weekly study reports with analytics and visualizations
+- Subject-specific analytics (total hours, session count, averages)
+- Mobile app (React Native) with code sharing architecture
