@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, Timer } from "lucide-react";
 
 const Auth = () => {
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -23,11 +23,13 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        // Sign up with phone as email format
+        const redirectUrl = `${window.location.origin}/`;
+        
         const { error } = await supabase.auth.signUp({
-          phone,
+          email,
           password,
           options: {
+            emailRedirectTo: redirectUrl,
             data: {
               full_name: fullName,
             },
@@ -42,9 +44,8 @@ const Auth = () => {
         });
         setIsSignUp(false);
       } else {
-        // Sign in
         const { error } = await supabase.auth.signInWithPassword({
-          phone,
+          email,
           password,
         });
 
@@ -84,7 +85,7 @@ const Auth = () => {
               StudyTracker
             </CardTitle>
             <CardDescription className="text-base mt-2">
-              {isSignUp ? "Create your student account" : "Sign in to track your progress"}
+              {isSignUp ? "Create your account and get your unique student code" : "Sign in to track your progress"}
             </CardDescription>
           </div>
         </CardHeader>
@@ -105,17 +106,16 @@ const Auth = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
-                id="phone"
-                type="tel"
-                placeholder="+1234567890"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="student@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="border-border/50"
               />
-              <p className="text-xs text-muted-foreground">Include country code (e.g., +1)</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
