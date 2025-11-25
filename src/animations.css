@@ -135,6 +135,75 @@
   }
 }
 
+/* Adding new animations for liveliness */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Updated easing curves for smoother transitions */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Adding Material Design 3 inspired hover effects */
+.hover-elevate {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-elevate:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.hover-scale-modern {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale-modern:hover {
+  transform: scale(1.08);
+}
+
 /* Utility classes for animations */
 .animate-slide-up {
   animation: slideInUp 0.5s ease-out;
@@ -195,6 +264,19 @@
   animation: wiggle 0.5s ease-in-out;
 }
 
+/* Utility classes for new animations */
+.animate-zoom-in {
+  animation: zoomIn 0.5s ease-out;
+}
+
+.animate-flip {
+  animation: flip 0.8s ease-in-out;
+}
+
+.animate-rotate {
+  animation: rotate 2s linear infinite;
+}
+
 /* Stagger animations for lists */
 .animate-stagger > * {
   animation: slideInUp 0.5s ease-out backwards;
@@ -229,6 +311,10 @@
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.transition-fluid {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Hover animations */
 .hover-lift {
   transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
@@ -253,4 +339,21 @@
 
 .hover-glow:hover {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.hover-elevate {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-elevate:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.hover-scale-modern {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale-modern:hover {
+  transform: scale(1.08);
 }
