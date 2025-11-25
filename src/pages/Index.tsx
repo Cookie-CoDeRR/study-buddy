@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { auth, db } from "@/integrations/firebase/client";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,56 +19,87 @@ interface Subject {
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session) {
-          navigate("/auth");
-        } else {
-          fetchProfile(session.user.id);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
         navigate("/auth");
+        setLoading(false);
       } else {
-        fetchProfile(session.user.id);
+        setUser(currentUser);
+        await fetchProfile(currentUser.uid);
+        setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [navigate]);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+  const generateStudentCode = async (): Promise<string> => {
+    let code = '';
+    let isUnique = false;
+    
+    while (!isUnique) {
+      code = 'STU' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, where('student_code', '==', code));
+      const querySnapshot = await getDocs(q);
+      isUnique = querySnapshot.empty;
+    }
+    
+    return code;
+  };
 
-    if (!error && data) {
-      setProfile(data);
+  const fetchProfile = async (userId: string, retries = 3) => {
+    try {
+      const docRef = doc(db, 'profiles', userId);
+      const docSnap = await getDoc(docRef);
+      
+      console.log('Fetching profile for userId:', userId, 'exists:', docSnap.exists());
+      
+      if (docSnap.exists()) {
+        console.log('Profile found:', docSnap.data());
+        setProfile(docSnap.data());
+      } else if (retries > 0) {
+        console.log('Profile not found, retrying... attempts left:', retries);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await fetchProfile(userId, retries - 1);
+      } else {
+        console.warn('Profile not found after retries, creating default profile');
+        const studentCode = await generateStudentCode();
+        const defaultProfile = {
+          user_id: userId,
+          full_name: null,
+          phone: null,
+          student_code: studentCode,
+          created_at: new Date().getTime(),
+        };
+        await setDoc(docRef, defaultProfile);
+        console.log('Default profile created:', defaultProfile);
+        setProfile(defaultProfile);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
     }
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      await signOut(auth);
+      navigate("/auth");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
   };
 
   const copyStudentCode = () => {
@@ -82,8 +114,15 @@ const Index = () => {
     }
   };
 
-  if (!user) {
-    return null;
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -94,17 +133,18 @@ const Index = () => {
             StudyTracker
           </h1>
           <div className="flex items-center gap-3">
-            {profile && (
+            {profile ? (
               <Card className="px-4 py-2 flex items-center gap-2 border-border/50">
                 <div>
                   <p className="text-sm text-muted-foreground">Student Code</p>
-                  <p className="font-mono font-semibold text-primary">{profile.student_code}</p>
+                  <p className="font-mono font-semibold text-primary">{profile.student_code || 'Generating...'}</p>
                 </div>
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={copyStudentCode}
                   className="h-8 w-8"
+                  disabled={!profile.student_code}
                 >
                   {codeCopied ? (
                     <Check className="h-4 w-4 text-success" />
@@ -113,7 +153,7 @@ const Index = () => {
                   )}
                 </Button>
               </Card>
-            )}
+            ) : null}
             <Button
               variant="outline"
               onClick={() => navigate("/profile")}
@@ -138,16 +178,16 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <StudyTimer
-              userId={user.id}
+              userId={user.uid}
               subjectId={selectedSubject?.id}
               subjectName={selectedSubject?.name}
             />
-            <StudyHistory userId={user.id} />
+            <StudyHistory userId={user.uid} />
           </div>
 
           <div className="space-y-8">
             <SubjectManager
-              userId={user.id}
+              userId={user.uid}
               onSelectSubject={setSelectedSubject}
               selectedSubject={selectedSubject}
             />

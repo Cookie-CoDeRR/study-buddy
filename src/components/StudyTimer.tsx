@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Play, Pause, Square, Coffee } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/firebase/client";
+import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface StudyTimerProps {
@@ -51,7 +52,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
     const durationMinutes = Math.floor(seconds / 60);
 
     try {
-      const { error } = await supabase.from("study_sessions").insert({
+      await addDoc(collection(db, 'study_sessions'), {
         user_id: userId,
         subject_id: subjectId || null,
         start_time: sessionStart.toISOString(),
@@ -59,9 +60,8 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
         duration_minutes: durationMinutes,
         session_type: isBreak ? "break" : "study",
         date: new Date().toISOString().split('T')[0],
+        created_at: new Date().getTime(),
       });
-
-      if (error) throw error;
 
       toast({
         title: "Session saved!",

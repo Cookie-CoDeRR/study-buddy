@@ -1,73 +1,259 @@
-# Welcome to your Lovable project
+# StudyTracker
 
-## Project info
+A modern study session tracking application built with React, Firebase, and Tailwind CSS. Track your study sessions, manage subjects, and monitor your study progress with an intuitive dashboard.
 
-**URL**: https://lovable.dev/projects/7d24e81e-bba5-4b75-a311-c372dac32bfd
+## Features
 
-## How can I edit this code?
+- **User Authentication**: Secure email/password authentication with Firebase Auth
+- **Study Session Tracking**: Record study sessions with start/end times and duration
+- **Subject Management**: Create and organize subjects with custom colors
+- **Break Mode**: Track break times separately from study sessions
+- **Real-time Statistics**: View today's study time, total study time, and total breaks
+- **Unique Student Codes**: Each user receives an auto-generated unique student code for identification
+- **Responsive Design**: Fully responsive UI built with Tailwind CSS and shadcn/ui components
+- **Real-time Updates**: Live Firestore listeners for instant data synchronization
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite 5
+- **Authentication**: Firebase Auth
+- **Database**: Firestore (NoSQL)
+- **UI Components**: shadcn/ui
+- **Styling**: Tailwind CSS
+- **Routing**: React Router v6
+- **State Management**: React Hooks
+- **Date Utilities**: date-fns
+- **Icons**: Lucide React
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7d24e81e-bba5-4b75-a311-c372dac32bfd) and start prompting.
+## Project Structure
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── pages/              # Main page components
+│   ├── Auth.tsx       # Login/Sign-up page
+│   ├── Index.tsx      # Dashboard/Home page
+│   ├── Profile.tsx    # User profile management
+│   └── NotFound.tsx   # 404 page
+├── components/        # Reusable components
+│   ├── StudyTimer.tsx        # Timer component for study/break sessions
+│   ├── StudyHistory.tsx      # Recent sessions display
+│   ├── SubjectManager.tsx    # Subject creation and management
+│   ├── NavLink.tsx           # Navigation link component
+│   └── ui/                   # shadcn/ui components
+├── integrations/
+│   └── firebase/
+│       ├── client.ts         # Firebase initialization
+│       └── types.ts          # TypeScript types for Firestore documents
+├── hooks/              # Custom React hooks
+├── lib/               # Utility functions
+└── App.tsx            # Main app component
 ```
 
-**Edit a file directly in GitHub**
+## Getting Started
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Prerequisites
 
-**Use GitHub Codespaces**
+- Node.js 16+ and npm (or use [nvm](https://github.com/nvm-sh/nvm))
+- A Firebase project with Firestore and Authentication enabled
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Installation
 
-## What technologies are used for this project?
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd study-buddy
+   ```
 
-This project is built with:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. **Set up Firebase**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
+   - Enable Firestore Database (Production mode)
+   - Enable Email/Password authentication
+   - Create composite indexes for the following queries:
+     - `subjects`: `user_id` (Asc) + `created_at` (Desc)
+     - `study_sessions`: `user_id` (Asc) + `start_time` (Desc)
 
-## How can I deploy this project?
+4. **Configure environment variables**
+   Create a `.env` file in the project root:
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/7d24e81e-bba5-4b75-a311-c372dac32bfd) and click on Share -> Publish.
+5. **Set Firestore Security Rules**
+   In Firebase Console > Firestore > Rules, set:
+   ```firestore
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /profiles/{userId} {
+         allow read, write: if request.auth.uid == userId;
+       }
+       
+       match /subjects/{document=**} {
+         allow read, write: if request.auth != null && 
+           (request.resource.data.user_id == request.auth.uid ||
+            resource.data.user_id == request.auth.uid);
+       }
+       
+       match /study_sessions/{document=**} {
+         allow read, write: if request.auth != null && 
+           (request.resource.data.user_id == request.auth.uid ||
+            resource.data.user_id == request.auth.uid);
+       }
+     }
+   }
+   ```
 
-## Can I connect a custom domain to my Lovable project?
+6. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+   The app will open at `http://localhost:8080/`
 
-Yes, you can!
+## Available Scripts
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run build:dev` - Build in development mode
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Firestore Schema
+
+### Collections
+
+#### `profiles`
+- Document ID: User UID
+- Fields:
+  - `user_id` (string) - User's Firebase UID
+  - `full_name` (string | null) - User's full name
+  - `phone` (string | null) - User's phone number
+  - `student_code` (string) - Unique identifier (auto-generated)
+  - `created_at` (number) - Timestamp in milliseconds
+
+#### `subjects`
+- Document ID: Auto-generated
+- Fields:
+  - `user_id` (string) - User's UID
+  - `name` (string) - Subject name
+  - `color` (string) - Hex color code
+  - `created_at` (number) - Timestamp in milliseconds
+
+#### `study_sessions`
+- Document ID: Auto-generated
+- Fields:
+  - `user_id` (string) - User's UID
+  - `subject_id` (string | null) - Reference to subject
+  - `start_time` (string) - ISO timestamp
+  - `end_time` (string) - ISO timestamp
+  - `duration_minutes` (number) - Duration in minutes
+  - `session_type` (string) - "study" or "break"
+  - `date` (string) - Date in YYYY-MM-DD format
+  - `created_at` (number) - Timestamp in milliseconds
+
+## Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository** and create a feature branch
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes** following our code style:
+   - Use TypeScript for type safety
+   - Follow React best practices (hooks, functional components)
+   - Keep components focused and reusable
+   - Add meaningful comments for complex logic
+
+3. **Test your changes** locally:
+   ```bash
+   npm run dev
+   ```
+
+4. **Lint and format** your code:
+   ```bash
+   npm run lint
+   ```
+
+5. **Commit with descriptive messages**:
+   ```bash
+   git commit -m "feat: add new feature description"
+   ```
+
+6. **Push to your fork and create a Pull Request**
+
+### Code Style Guidelines
+
+- Use functional components with hooks
+- Prefer TypeScript interfaces for props
+- Keep components small and focused (under 200 lines when possible)
+- Use descriptive variable and function names
+- Add error handling for async operations
+- Use Firestore real-time listeners for live updates
+
+### Common Tasks
+
+**Adding a new page:**
+1. Create a new file in `src/pages/`
+2. Add the route in `App.tsx`
+3. Import and use the page component
+
+**Creating a new component:**
+1. Create a file in `src/components/`
+2. Use functional component with TypeScript
+3. Export the component as default
+
+**Adding a UI element:**
+1. Check if shadcn/ui has the component
+2. If yes, import from `@/components/ui/`
+3. If no, build custom with Tailwind CSS
+
+## Troubleshooting
+
+**"No document to update" error**
+- Ensure the Firestore document exists
+- Check that the user UID matches the document ID
+- Verify Firestore security rules allow the operation
+
+**"The query requires an index" error**
+- Firebase will provide a link to create the index
+- Create the composite index as suggested
+- Indexes may take 1-2 minutes to build
+
+**Student code shows "Generating..."**
+- Check browser console for errors
+- Verify Firebase config is correct in `.env`
+- Clear browser cache and refresh
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Support
+
+For issues or questions:
+1. Check existing GitHub issues
+2. Review Firebase documentation: https://firebase.google.com/docs
+3. Check TypeScript documentation: https://www.typescriptlang.org/docs/
+
+## Roadmap
+
+Future features planned:
+- Study goals and targets
+- Weekly study reports
+- Study streak tracking
+- Subject-specific analytics
+- Pomodoro timer preset
+- Dark/Light theme toggle
+- Mobile app (React Native)

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/integrations/firebase/client";
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 interface Subject {
@@ -29,78 +30,93 @@ const SubjectManager = ({ userId, onSelectSubject, selectedSubject }: SubjectMan
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchSubjects();
+    if (userId) {
+      fetchSubjects();
+    }
   }, [userId]);
 
   const fetchSubjects = async () => {
-    const { data, error } = await supabase
-      .from("subjects")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const q = query(
+        collection(db, 'subjects'),
+        where('user_id', '==', userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const subjectsData: Subject[] = [];
+      querySnapshot.forEach((doc) => {
+        subjectsData.push({
+          id: doc.id,
+          name: doc.data().name,
+          color: doc.data().color,
+        });
+      });
+      
+      // Sort by created_at descending in JavaScript
+      subjectsData.sort((a, b) => {
+        const aTime = querySnapshot.docs.find(d => d.id === a.id)?.data().created_at || 0;
+        const bTime = querySnapshot.docs.find(d => d.id === b.id)?.data().created_at || 0;
+        return bTime - aTime;
+      });
+      
+      setSubjects(subjectsData);
+    } catch (error: any) {
       toast({
         title: "Error loading subjects",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    setSubjects(data || []);
   };
 
   const addSubject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubjectName.trim()) return;
 
-    const { error } = await supabase.from("subjects").insert({
-      user_id: userId,
-      name: newSubjectName.trim(),
-      color: selectedColor,
-    });
+    try {
+      await addDoc(collection(db, 'subjects'), {
+        user_id: userId,
+        name: newSubjectName.trim(),
+        color: selectedColor,
+        created_at: new Date().getTime(),
+      });
 
-    if (error) {
+      toast({
+        title: "Subject added!",
+        description: `${newSubjectName} has been added to your subjects.`,
+      });
+
+      setNewSubjectName("");
+      fetchSubjects();
+    } catch (error: any) {
       toast({
         title: "Error adding subject",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Subject added!",
-      description: `${newSubjectName} has been added to your subjects.`,
-    });
-
-    setNewSubjectName("");
-    fetchSubjects();
   };
 
   const deleteSubject = async (id: string) => {
-    const { error } = await supabase.from("subjects").delete().eq("id", id);
+    try {
+      await deleteDoc(doc(db, 'subjects', id));
 
-    if (error) {
+      if (selectedSubject?.id === id) {
+        onSelectSubject(null);
+      }
+
+      toast({
+        title: "Subject deleted",
+        description: "Subject has been removed.",
+      });
+
+      fetchSubjects();
+    } catch (error: any) {
       toast({
         title: "Error deleting subject",
         description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    if (selectedSubject?.id === id) {
-      onSelectSubject(null);
-    }
-
-    toast({
-      title: "Subject deleted",
-      description: "Subject has been removed.",
-    });
-
-    fetchSubjects();
   };
 
   return (

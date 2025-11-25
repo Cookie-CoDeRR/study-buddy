@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth, db } from "@/integrations/firebase/client";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { collection, doc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Timer } from "lucide-react";
+import { BookOpen, Clock, Lightbulb } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -17,39 +19,56 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const generateStudentCode = async (): Promise<string> => {
+    // Generate a unique student code
+    let code = '';
+    let isUnique = false;
+    
+    while (!isUnique) {
+      code = 'STU' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, where('student_code', '==', code));
+      const querySnapshot = await getDocs(q);
+      isUnique = querySnapshot.empty;
+    }
+    
+    return code;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (isSignUp) {
-        const redirectUrl = `${window.location.origin}/`;
-        
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              full_name: fullName,
-            },
-          },
+        // Create user with Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Generate unique student code
+        const studentCode = await generateStudentCode();
+
+        // Create profile document in Firestore
+        await setDoc(doc(db, 'profiles', user.uid), {
+          user_id: user.uid,
+          full_name: fullName || null,
+          phone: null,
+          student_code: studentCode,
+          created_at: new Date().getTime(),
         });
 
-        if (error) throw error;
+        console.log('Profile created with student code:', studentCode);
 
         toast({
           title: "Account created!",
           description: "You can now sign in with your credentials.",
         });
         setIsSignUp(false);
+        setEmail("");
+        setPassword("");
+        setFullName("");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
+        await signInWithEmailAndPassword(auth, email, password);
 
         toast({
           title: "Welcome back!",
@@ -77,7 +96,7 @@ const Auth = () => {
               <BookOpen className="h-8 w-8 text-primary" />
             </div>
             <div className="p-3 bg-accent/10 rounded-xl">
-              <Timer className="h-8 w-8 text-accent" />
+              <Lightbulb className="h-8 w-8 text-accent" />
             </div>
           </div>
           <div>

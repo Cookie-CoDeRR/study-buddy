@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { auth, db } from "@/integrations/firebase/client";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,27 +21,35 @@ const Profile = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
         navigate("/auth");
       } else {
-        setUser(session.user);
-        fetchProfile(session.user.id);
+        setUser(currentUser);
+        await fetchProfile(currentUser.uid);
       }
     });
+
+    return () => unsubscribe();
   }, [navigate]);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!error && data) {
-      setProfile(data);
-      setFullName(data.full_name || "");
-      setPhone(data.phone || "");
+    try {
+      const docRef = doc(db, 'profiles', userId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfile(data);
+        setFullName(data.full_name || "");
+        setPhone(data.phone || "");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load profile",
+        variant: "destructive",
+      });
     }
   };
 
@@ -51,22 +60,20 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName.trim(),
-          phone: phone.trim() || null,
-        })
-        .eq("user_id", user.id);
-
-      if (error) throw error;
+      const docRef = doc(db, 'profiles', user.uid);
+      
+      // Use setDoc with merge to create if doesn't exist, or update if it does
+      await setDoc(docRef, {
+        full_name: fullName.trim() || null,
+        phone: phone.trim() || null,
+      }, { merge: true });
 
       toast({
         title: "Profile updated!",
         description: "Your profile information has been saved.",
       });
 
-      fetchProfile(user.id);
+      await fetchProfile(user.uid);
     } catch (error: any) {
       toast({
         title: "Error",
