@@ -44,58 +44,77 @@ export function SubjectAnalytics({ userId }: SubjectAnalyticsProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Subject Analytics</h2>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg">
+          <BookOpen className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold">Subject Analytics</h2>
+          <p className="text-sm text-muted-foreground">Study breakdown by subject</p>
+        </div>
+      </div>
       
       <div className="grid gap-4 animate-stagger">
         {subjects.map((subject, index) => (
           <Card
             key={subject.subjectId}
-            className="p-6 border-border/50 hover-lift transition-smooth animate-slide-up"
+            className="relative overflow-hidden p-6 border-border/50 hover-lift transition-all duration-300 hover:shadow-lg"
             style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-6 h-6 rounded-full"
-                  style={{ backgroundColor: subject.subjectColor }}
-                />
-                <div>
-                  <h3 className="font-semibold">{subject.subjectName}</h3>
-                  <p className="text-sm text-muted-foreground">{subject.sessionCount} sessions</p>
+            {/* Color accent bar */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-1"
+              style={{ backgroundColor: subject.subjectColor }}
+            />
+            
+            <div className="ml-2 space-y-5">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <div
+                    className="w-10 h-10 rounded-lg shadow-sm"
+                    style={{ backgroundColor: subject.subjectColor + '20', borderLeft: `3px solid ${subject.subjectColor}` }}
+                  />
+                  <div>
+                    <h3 className="font-semibold text-lg">{subject.subjectName}</h3>
+                    <p className="text-xs text-muted-foreground">📚 {subject.sessionCount} sessions</p>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold">{subject.totalMinutes}</p>
-                <p className="text-xs text-muted-foreground">total minutes</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <p className="text-xs text-muted-foreground">Avg Session</p>
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{subject.totalMinutes}</p>
+                  <p className="text-xs text-muted-foreground">minutes</p>
                 </div>
-                <p className="text-lg font-bold text-primary">{subject.averageSessionDuration}m</p>
               </div>
 
-              <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <Zap className="h-4 w-4 text-accent" />
-                  <p className="text-xs text-muted-foreground">Sessions</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-900/20 dark:to-blue-900/10 rounded-lg border border-blue-200/50 dark:border-blue-800/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <p className="text-xs font-medium text-muted-foreground">Avg</p>
+                  </div>
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{subject.averageSessionDuration}m</p>
+                  <p className="text-xs text-muted-foreground mt-1">per session</p>
                 </div>
-                <p className="text-lg font-bold text-accent">{subject.sessionCount}</p>
-              </div>
 
-              <div className="p-3 bg-success/10 rounded-lg border border-success/20">
-                <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-4 w-4 text-success" />
-                  <p className="text-xs text-muted-foreground">Total Hours</p>
+                <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-50/50 dark:from-purple-900/20 dark:to-purple-900/10 rounded-lg border border-purple-200/50 dark:border-purple-800/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <p className="text-xs font-medium text-muted-foreground">Total</p>
+                  </div>
+                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{subject.sessionCount}</p>
+                  <p className="text-xs text-muted-foreground mt-1">sessions</p>
                 </div>
-                <p className="text-lg font-bold text-success">
-                  {(subject.totalMinutes / 60).toFixed(1)}h
-                </p>
+
+                <div className="p-3 bg-gradient-to-br from-green-50 to-green-50/50 dark:from-green-900/20 dark:to-green-900/10 rounded-lg border border-green-200/50 dark:border-green-800/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <p className="text-xs font-medium text-muted-foreground">Hours</p>
+                  </div>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {(subject.totalMinutes / 60).toFixed(1)}h
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">total</p>
+                </div>
               </div>
             </div>
           </Card>

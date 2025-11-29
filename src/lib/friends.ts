@@ -86,9 +86,9 @@ export async function sendFriendRequest(
       userId: fromUserId,
       friendUserId: toUserId,
       friendName: toUserData.full_name || 'Unknown User',
-      friendEmail: toUserData.email,
+      friendEmail: toUserData.email || '',
       friendStudentCode: toStudentCode,
-      friendProfilePicture: toUserData.profile_picture_url,
+      friendProfilePicture: toUserData.profile_picture_url || '',
       status: 'pending',
       createdAt: new Date().getTime(),
     });
@@ -130,18 +130,43 @@ export async function rejectFriendRequest(friendRequestId: string): Promise<void
  */
 export async function getUserFriends(userId: string): Promise<Friend[]> {
   try {
-    const q = query(
+    // Get friends where user sent the request
+    const q1 = query(
       collection(db, 'friends'),
       where('userId', '==', userId),
       where('status', '==', 'accepted')
     );
-    const snapshot = await getDocs(q);
+    const snapshot1 = await getDocs(q1);
     const friends: Friend[] = [];
 
-    snapshot.forEach((doc) => {
+    snapshot1.forEach((doc) => {
       friends.push({
         id: doc.id,
         ...doc.data(),
+      } as Friend);
+    });
+
+    // Get friends where user received the request (they are the friendUserId)
+    const q2 = query(
+      collection(db, 'friends'),
+      where('friendUserId', '==', userId),
+      where('status', '==', 'accepted')
+    );
+    const snapshot2 = await getDocs(q2);
+
+    snapshot2.forEach((doc) => {
+      const data = doc.data();
+      friends.push({
+        id: doc.id,
+        userId: data.friendUserId, // Swap for consistency
+        friendUserId: data.userId,
+        friendName: data.friendName,
+        friendEmail: data.friendEmail,
+        friendStudentCode: data.friendStudentCode,
+        friendProfilePicture: data.friendProfilePicture,
+        status: 'accepted',
+        createdAt: data.createdAt,
+        acceptedAt: data.acceptedAt,
       } as Friend);
     });
 
@@ -157,6 +182,7 @@ export async function getUserFriends(userId: string): Promise<Friend[]> {
  */
 export async function getPendingRequests(userId: string): Promise<Friend[]> {
   try {
+    // Get sent requests
     const q = query(
       collection(db, 'friends'),
       where('userId', '==', userId),
@@ -169,6 +195,29 @@ export async function getPendingRequests(userId: string): Promise<Friend[]> {
       requests.push({
         id: doc.id,
         ...doc.data(),
+      } as Friend);
+    });
+
+    // Get received requests (where user is the friendUserId)
+    const q2 = query(
+      collection(db, 'friends'),
+      where('friendUserId', '==', userId),
+      where('status', '==', 'pending')
+    );
+    const snapshot2 = await getDocs(q2);
+
+    snapshot2.forEach((doc) => {
+      const data = doc.data();
+      requests.push({
+        id: doc.id,
+        userId: data.friendUserId,
+        friendUserId: data.userId,
+        friendName: data.friendName,
+        friendEmail: data.friendEmail,
+        friendStudentCode: data.friendStudentCode,
+        friendProfilePicture: data.friendProfilePicture,
+        status: 'pending',
+        createdAt: data.createdAt,
       } as Friend);
     });
 
@@ -239,6 +288,32 @@ export async function joinStudyGroup(
     });
   } catch (error) {
     console.error('Error joining group:', error);
+    throw error;
+  }
+}
+
+/**
+ * Find a study group by invite code
+ */
+export async function findGroupByInviteCode(inviteCode: string): Promise<StudyGroup | null> {
+  try {
+    const q = query(
+      collection(db, 'study_groups'),
+      where('inviteCode', '==', inviteCode)
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    const doc = snapshot.docs[0];
+    return {
+      id: doc.id,
+      ...doc.data(),
+    } as StudyGroup;
+  } catch (error) {
+    console.error('Error finding group by invite code:', error);
     throw error;
   }
 }

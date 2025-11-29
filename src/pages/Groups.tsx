@@ -13,6 +13,7 @@ import {
   createStudyGroup, 
   joinStudyGroup,
   leaveStudyGroup,
+  findGroupByInviteCode,
   StudyGroup,
 } from '@/lib/friends';
 import { StudyGroupView } from '@/components/StudyGroup';
@@ -117,8 +118,8 @@ export function Groups() {
 
     setJoining(true);
     try {
-      // Find group by invite code
-      const groupToJoin = groups.find(g => g.inviteCode === inviteCode.trim());
+      // Find group by invite code from all groups
+      const groupToJoin = await findGroupByInviteCode(inviteCode.trim());
       
       if (!groupToJoin) {
         throw new Error('Invite code not found');
@@ -181,7 +182,7 @@ export function Groups() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>

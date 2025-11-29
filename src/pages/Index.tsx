@@ -5,7 +5,9 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X, Loader2 } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -13,6 +15,7 @@ import StreakDisplay from "@/components/StreakDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 import { calculateStreak } from "@/lib/streak";
+import { getUserFriends, Friend } from "@/lib/friends";
 
 interface Subject {
   id: string;
@@ -23,6 +26,7 @@ interface Subject {
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,12 +42,22 @@ const Index = () => {
       } else {
         setUser(currentUser);
         await fetchProfile(currentUser.uid);
+        await loadFriends(currentUser.uid);
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, [navigate]);
+
+  const loadFriends = async (userId: string) => {
+    try {
+      const userFriends = await getUserFriends(userId);
+      setFriends(userFriends);
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
 
   const generateStudentCode = async (): Promise<string> => {
     let code = '';
@@ -348,6 +362,68 @@ const Index = () => {
               onSelectSubject={setSelectedSubject}
               selectedSubject={selectedSubject}
             />
+
+            {/* Online Friends Section */}
+            <Card className="p-5 border-border/50 bg-gradient-to-br from-card/50 to-card/30 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/5 to-accent/5 rounded-full -mr-16 -mt-16" />
+              
+              <div className="relative space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg">
+                    <Users className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Friends</h3>
+                    <p className="text-xs text-muted-foreground">{friends.length} friend{friends.length !== 1 ? 's' : ''}</p>
+                  </div>
+                  <Badge variant="secondary" className="ml-auto rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+                    Online
+                  </Badge>
+                </div>
+
+                {friends.length === 0 ? (
+                  <div className="p-4 text-center text-muted-foreground rounded-lg bg-secondary/50">
+                    <p className="text-sm">No friends yet. Add friends using their student code in Groups!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {friends.slice(0, 5).map((friend) => (
+                      <div
+                        key={friend.id}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/5 transition-colors"
+                      >
+                        <Avatar className="h-10 w-10 border-2 border-primary/20">
+                          <AvatarImage src={friend.friendProfilePicture} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white font-bold">
+                            {friend.friendName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{friend.friendName}</p>
+                          <p className="text-xs text-muted-foreground">{friend.friendStudentCode}</p>
+                        </div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      </div>
+                    ))}
+                    {friends.length > 5 && (
+                      <div className="p-2 text-center text-xs text-muted-foreground">
+                        +{friends.length - 5} more friend{friends.length - 5 !== 1 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg border-primary/20 hover:bg-primary/5"
+                  onClick={() => navigate("/groups")}
+                >
+                  Manage Friends
+                  <Users className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
