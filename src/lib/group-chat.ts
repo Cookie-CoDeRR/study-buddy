@@ -47,14 +47,20 @@ export async function sendChatMessage(
   message: string
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, 'group_messages'), {
+    const messageData: any = {
       groupId,
       userId,
       userName,
-      userAvatar,
       message: message.trim(),
       createdAt: Timestamp.now(),
-    });
+    };
+    
+    // Only include userAvatar if it's defined
+    if (userAvatar) {
+      messageData.userAvatar = userAvatar;
+    }
+    
+    const docRef = await addDoc(collection(db, 'group_messages'), messageData);
     return docRef.id;
   } catch (error) {
     console.error('Error sending message:', error);
@@ -133,17 +139,29 @@ export function subscribeToGroupMessages(
 
         snapshot.forEach((doc) => {
           const data = doc.data() as any;
+          
+          // Convert Timestamp to milliseconds
+          let createdAtMs = data.createdAt;
+          if (data.createdAt && typeof data.createdAt.toMillis === 'function') {
+            createdAtMs = data.createdAt.toMillis();
+          } else if (data.createdAt && typeof data.createdAt === 'number') {
+            createdAtMs = data.createdAt;
+          } else if (data.createdAt && data.createdAt instanceof Date) {
+            createdAtMs = data.createdAt.getTime();
+          }
+          
           messages.push({
             id: doc.id,
             groupId: data.groupId,
             userId: data.userId,
             userName: data.userName,
-            userAvatar: data.userAvatar,
+            userAvatar: data.userAvatar || '',
             message: data.message,
-            createdAt: data.createdAt?.toMillis?.() || data.createdAt,
+            createdAt: createdAtMs || Date.now(),
           });
         });
 
+        console.log(`[Chat] Updated ${messages.length} messages for group ${groupId}`);
         callback(messages);
       },
       (error) => {
@@ -174,7 +192,7 @@ export async function uploadGroupFile(
   fileType: string
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, 'group_files'), {
+    const fileData = {
       groupId,
       uploadedBy: userId,
       uploadedByName: userName,
@@ -183,7 +201,9 @@ export async function uploadGroupFile(
       fileSize,
       fileType,
       uploadedAt: Timestamp.now(),
-    });
+    };
+    
+    const docRef = await addDoc(collection(db, 'group_files'), fileData);
     return docRef.id;
   } catch (error) {
     console.error('Error uploading file:', error);

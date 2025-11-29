@@ -29,14 +29,17 @@ export function ChatRoom({ groupId, userId, userName, userAvatar }: ChatRoomProp
 
   useEffect(() => {
     setLoading(true);
+    console.log(`[ChatRoom] Subscribing to messages for group: ${groupId}`);
     
     // Set a timeout to stop loading after 5 seconds (in case there are no messages or error)
     const loadingTimeout = setTimeout(() => {
+      console.log('[ChatRoom] Loading timeout reached, stopping loading state');
       setLoading(false);
     }, 5000);
 
     // Subscribe to messages
     const unsubscribe = subscribeToGroupMessages(groupId, (newMessages) => {
+      console.log(`[ChatRoom] Received ${newMessages.length} messages from subscription`);
       setMessages(newMessages);
       setLoading(false);
       clearTimeout(loadingTimeout);
@@ -57,10 +60,13 @@ export function ChatRoom({ groupId, userId, userName, userAvatar }: ChatRoomProp
     if (!inputValue.trim()) return;
 
     setSending(true);
+    console.log(`[ChatRoom] Sending message: "${inputValue}"`);
     try {
       await sendChatMessage(groupId, userId, userName, userAvatar, inputValue);
+      console.log('[ChatRoom] Message sent successfully');
       setInputValue('');
     } catch (error) {
+      console.error('[ChatRoom] Error sending message:', error);
       toast({
         title: 'Error',
         description: 'Failed to send message',
