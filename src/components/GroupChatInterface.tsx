@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Phone, Video, Search, X, ArrowLeft } from 'lucide-react';
+import { Info, Phone, Video, Search, X, ArrowLeft, Users as UsersIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ChatRoom } from '@/components/ChatRoom';
 import { FileSharing } from '@/components/FileSharing';
@@ -30,6 +30,7 @@ export function GroupChatInterface({
   const [loading, setLoading] = useState(true);
   const [searchMember, setSearchMember] = useState('');
   const [showInfo, setShowInfo] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     loadMembers();
@@ -52,8 +53,10 @@ export function GroupChatInterface({
   return (
     <div className="flex flex-col w-full h-full bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-1 gap-0 overflow-hidden">
-        {/* Left Sidebar - Members */}
-        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        {/* Left Sidebar - Members (Hidden on mobile by default) */}
+        <div className={`${
+          sidebarOpen ? 'w-80' : 'w-0'
+        } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden md:w-80`}>
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-3">
             <div className="flex items-center justify-between">
@@ -186,28 +189,37 @@ export function GroupChatInterface({
         {/* Right Side - Chat & Files */}
         <div className="flex-1 flex flex-col">
           {/* Chat Header */}
-          <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-            <div className="flex items-center gap-3">
+          <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
               {onClose && (
                 <Button
                   size="icon"
                   variant="ghost"
                   onClick={onClose}
-                  className="h-10 w-10 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="h-10 w-10 hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
                 >
                   <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </Button>
               )}
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="h-10 w-10 hover:bg-gray-100 dark:hover:bg-gray-700 md:hidden flex-shrink-0"
+                title="Toggle members list"
+              >
+                <UsersIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </Button>
+              <div className="min-w-0">
+                <h1 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
                   {group.name}
                 </h1>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 truncate">
                   {group.memberCount} members • {members.filter(m => m.totalTodayMinutes > 0).length} active
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
               <Button size="icon" variant="ghost" className="h-10 w-10 hover:bg-blue-100 dark:hover:bg-blue-900/30" title="Start call">
                 <Phone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </Button>
@@ -220,9 +232,9 @@ export function GroupChatInterface({
           {/* Chat Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-              <TabsList className="w-full rounded-none justify-start border-b border-gray-200 dark:border-gray-700 bg-transparent px-6">
-                <TabsTrigger value="chat">Chat</TabsTrigger>
-                <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsList className="w-full rounded-none justify-start border-b border-gray-200 dark:border-gray-700 bg-transparent px-4 md:px-6">
+                <TabsTrigger value="chat" className="text-sm md:text-base">Chat</TabsTrigger>
+                <TabsTrigger value="files" className="text-sm md:text-base">Files</TabsTrigger>
               </TabsList>
 
               {/* Chat Tab */}

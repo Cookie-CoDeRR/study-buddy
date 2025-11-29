@@ -1,32 +1,60 @@
 # StudyTracker
 
-A modern study session tracking application built with React, Firebase, and Tailwind CSS. Track your study sessions, manage subjects, and monitor your study progress with an intuitive dashboard.
+A comprehensive study session tracking application with social features, real-time collaboration, and competitive gamification. Built with React, Firebase, and Tailwind CSS.
 
-## Features
+## ✨ Features
 
-- **User Authentication**: Secure email/password authentication with Firebase Auth
-- **Profile Management**: Upload and manage profile pictures with avatar fallback
-- **Study Session Tracking**: Record study sessions with start/end times and duration
+### Core Features
+- **User Authentication**: Secure email/password authentication with unique username system
+- **Profile Management**: Upload profile pictures, auto-generated student codes, username preferences
+- **Study Session Tracking**: Record study sessions with automatic streak tracking
 - **Subject Management**: Create and organize subjects with custom colors
-- **Break Mode**: Track break times separately from study sessions
-- **Real-time Statistics**: View today's study time, total study time, and total breaks
-- **Unique Student Codes**: Each user receives an auto-generated unique student code for identification
 - **Study Streak Tracking**: Track consecutive days of studying with current and all-time streaks
-- **Pomodoro Timer Presets**: Quick access to preset timers (15min, 25min, 50min study sessions and 5min, 15min breaks)
-- **Dark/Light Theme Toggle**: System theme detection with manual light/dark/system mode selection
-- **Responsive Design**: Fully responsive UI built with Tailwind CSS and shadcn/ui components
-- **Real-time Updates**: Live Firestore listeners for instant data synchronization
+- **Pomodoro Timer Presets**: 15min, 25min, and 50min study sessions with break timers
+- **Dark/Light Theme Toggle**: System theme detection with persistent preference storage
+
+### Analytics & Reports
+- **Study Goals**: Set daily and weekly goals per subject and overall
+- **Analytics Dashboard**: 3-tab analytics page with:
+  - Goal tracking and progress visualization
+  - Subject-specific analytics with charts
+  - Weekly study reports with trends
+- **Calendar Heatmap**: Visual representation of study history by day
+- **Performance Insights**: Track trends and identify study patterns
+
+### Social & Collaboration
+- **Study Groups**: Create or join study groups with invite codes
+- **Group Chat**: Real-time group messaging with Discord-like interface
+  - WhatsApp-style split-view with members sidebar
+  - File sharing in groups
+  - Real-time message updates
+  - Delete your own messages
+- **Friends System**: Add friends and manage relationships
+- **Competitive Leaderboards**: 
+  - Group-based rankings by study hours
+  - Glowing animations for top performers (8h+ = fire emoji 🔥)
+  - Member status indicators
+- **Member Directory**: View all group members with streaks and today's study time
+
+### Landing Page & Website
+- Modern landing page with feature showcase
+- Call-to-action buttons
+- Testimonials section
+- Statistics display
+- Smart routing (unauthenticated → website, authenticated → app)
 
 ## Tech Stack
 
-- **Frontend Framework**: React 18 with TypeScript
-- **Build Tool**: Vite 5
+- **Frontend Framework**: React 18.3.1 with TypeScript
+- **Build Tool**: Vite 5.4.19
 - **Authentication**: Firebase Auth
 - **Database**: Firestore (NoSQL)
-- **UI Components**: shadcn/ui
-- **Styling**: Tailwind CSS
+- **File Storage**: Firebase Storage
+- **Real-time**: Firestore onSnapshot listeners
+- **UI Components**: shadcn/ui (Radix UI)
+- **Styling**: Tailwind CSS with dark mode
 - **Routing**: React Router v6
-- **State Management**: React Hooks
+- **Visualization**: Recharts for analytics
 - **Date Utilities**: date-fns
 - **Icons**: Lucide React
 
@@ -34,36 +62,61 @@ A modern study session tracking application built with React, Firebase, and Tail
 
 ```
 src/
-├── pages/              # Main page components
-│   ├── Auth.tsx       # Login/Sign-up page
-│   ├── Index.tsx      # Dashboard/Home page
-│   ├── Profile.tsx    # User profile management
-│   └── NotFound.tsx   # 404 page
-├── components/        # Reusable components
-│   ├── StudyTimer.tsx        # Timer with Pomodoro presets
-│   ├── StudyHistory.tsx      # Recent sessions display
-│   ├── SubjectManager.tsx    # Subject creation and management
-│   ├── StreakDisplay.tsx     # Current and longest streak display
-│   ├── ThemeToggle.tsx       # Theme switcher component
-│   ├── NavLink.tsx           # Navigation link component
+├── pages/
+│   ├── Auth.tsx              # Login/Sign-up with username validation
+│   ├── Index.tsx             # Main dashboard
+│   ├── Profile.tsx           # User profile management
+│   ├── Analytics.tsx         # 3-tab analytics dashboard
+│   ├── Groups.tsx            # Groups list and management
+│   ├── GroupChat.tsx         # Group chat page
+│   ├── Website.tsx           # Landing page
+│   └── NotFound.tsx
+├── components/
+│   ├── StudyTimer.tsx
+│   ├── StudyHistory.tsx
+│   ├── SubjectManager.tsx
+│   ├── StreakDisplay.tsx
+│   ├── Leaderboard.tsx
+│   ├── CalendarHeatmap.tsx
+│   ├── GoalManager.tsx
+│   ├── GoalProgressDisplay.tsx
+│   ├── SubjectAnalytics.tsx
+│   ├── WeeklyReports.tsx
+│   ├── StudyGroup.tsx
+│   ├── GroupChatInterface.tsx
+│   ├── ChatRoom.tsx
+│   ├── FileSharing.tsx
+│   ├── FriendsManager.tsx
+│   ├── ThemeToggle.tsx
+│   ├── ProfilePictureUploader.tsx
 │   └── ui/                   # shadcn/ui components
 ├── contexts/
-│   └── ThemeContext.tsx      # Dark/Light theme context provider
-├── integrations/
-│   └── firebase/
-│       ├── client.ts         # Firebase initialization
-│       └── types.ts          # TypeScript types for Firestore documents
-├── hooks/              # Custom React hooks
-├── lib/                # Utility functions (includes streak.ts)
-└── App.tsx            # Main app component
+│   └── ThemeContext.tsx
+├── hooks/
+│   └── use-toast.ts
+├── lib/
+│   ├── firebase.js
+│   ├── utils.ts
+│   ├── analytics.ts
+│   ├── goals.ts
+│   ├── friends.ts
+│   ├── group-chat.ts
+│   ├── streak.ts
+│   ├── storage.ts
+│   ├── image-compression.ts
+│   └── avatar.ts
+└── App.tsx
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 16+ and npm (or use [nvm](https://github.com/nvm-sh/nvm))
-- A Firebase project with Firestore and Authentication enabled
+- Node.js 16+ and npm
+- A Firebase project with:
+  - Firestore Database (Production mode)
+  - Authentication (Email/Password)
+  - Storage (Profile pictures)
 
 ### Installation
 
@@ -80,23 +133,9 @@ src/
 
 3. **Set up Firebase**
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
-   - Enable Firestore Database (Production mode)
+   - Enable Firestore Database
    - Enable Email/Password authentication
-   - Enable Storage (for profile pictures)
-   - Create composite indexes for the following queries:
-     - `subjects`: `user_id` (Asc) + `created_at` (Desc)
-     - `study_sessions`: `user_id` (Asc) + `start_time` (Desc)
-   - Set Storage Rules to allow authenticated users to read/write their own files:
-     ```firestore
-     rules_version = '2';
-     service firebase.storage {
-       match /b/{bucket}/o {
-         match /profile-pictures/{userId}/{allPaths=**} {
-           allow read, write: if request.auth.uid == userId;
-         }
-       }
-     }
-     ```
+   - Enable Storage with appropriate rules
 
 4. **Configure environment variables**
    Create a `.env` file in the project root:
@@ -109,8 +148,12 @@ src/
    VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-5. **Set Firestore Security Rules**
-   In Firebase Console > Firestore > Rules, set:
+5. **Create Firestore Indexes**
+   See [FIRESTORE_INDEXES.md](./FIRESTORE_INDEXES.md) for required composite indexes:
+   - `group_messages`: `groupId` (Asc) + `createdAt` (Asc)
+   - `group_files`: `groupId` (Asc) + `uploadedAt` (Desc)
+
+6. **Set Firestore Security Rules**
    ```firestore
    rules_version = '2';
    service cloud.firestore {
@@ -121,167 +164,138 @@ src/
        
        match /subjects/{document=**} {
          allow read, write: if request.auth != null && 
-           (request.resource.data.user_id == request.auth.uid ||
-            resource.data.user_id == request.auth.uid);
+           request.resource.data.user_id == request.auth.uid;
        }
        
        match /study_sessions/{document=**} {
          allow read, write: if request.auth != null && 
-           (request.resource.data.user_id == request.auth.uid ||
-            resource.data.user_id == request.auth.uid);
+           request.resource.data.user_id == request.auth.uid;
+       }
+       
+       match /goals/{document=**} {
+         allow read, write: if request.auth != null && 
+           request.resource.data.user_id == request.auth.uid;
+       }
+       
+       match /friends/{document=**} {
+         allow read, write: if request.auth != null;
+       }
+       
+       match /study_groups/{groupId} {
+         allow read: if request.auth != null && 
+           request.auth.uid in resource.data.members;
+         allow create: if request.auth != null;
+         allow update, delete: if request.auth != null && 
+           request.auth.uid == resource.data.creatorId;
+       }
+       
+       match /group_messages/{document=**} {
+         allow read, write: if request.auth != null;
+       }
+       
+       match /group_files/{document=**} {
+         allow read, write: if request.auth != null;
        }
      }
    }
    ```
 
-6. **Start the development server**
+7. **Set Storage Security Rules**
+   ```
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       match /profile-pictures/{userId}/{allPaths=**} {
+         allow read: if request.auth.uid == userId;
+         allow write: if request.auth.uid == userId && request.resource.size < 10485760;
+       }
+       match /group-files/{groupId}/{userId}/{allPaths=**} {
+         allow read, write: if request.auth.uid == userId;
+       }
+     }
+   }
+   ```
+
+8. **Start the development server**
    ```bash
    npm run dev
    ```
-   The app will open at `http://localhost:8080/`
+   The app opens at `http://localhost:5173/`
 
 ## Available Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm run build:dev` - Build in development mode
-- `npm run preview` - Preview production build locally
+- `npm run dev` - Development server with HMR
+- `npm run build` - Production build
+- `npm run build:dev` - Development build
+- `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
-## Firestore Schema
+## Firestore Collections
 
-### Collections
-
-#### `profiles`
-- Document ID: User UID
-- Fields:
-  - `user_id` (string) - User's Firebase UID
-  - `full_name` (string | null) - User's full name
-  - `phone` (string | null) - User's phone number
-  - `profile_picture_url` (string | null) - URL to user's profile picture in Firebase Storage
-  - `student_code` (string) - Unique identifier (auto-generated)
-  - `created_at` (number) - Timestamp in milliseconds
-  - `current_streak` (number) - Current consecutive days studied
-  - `longest_streak` (number) - All-time longest streak
-  - `last_study_date` (string | null) - Last study date in YYYY-MM-DD format
-  - `theme` (string) - Theme preference ('light' | 'dark' | 'system')
-
-#### `subjects`
-- Document ID: Auto-generated
-- Fields:
-  - `user_id` (string) - User's UID
-  - `name` (string) - Subject name
-  - `color` (string) - Hex color code
-  - `created_at` (number) - Timestamp in milliseconds
-
-#### `study_sessions`
-- Document ID: Auto-generated
-- Fields:
-  - `user_id` (string) - User's UID
-  - `subject_id` (string | null) - Reference to subject
-  - `start_time` (string) - ISO timestamp
-  - `end_time` (string) - ISO timestamp
-  - `duration_minutes` (number) - Duration in minutes
-  - `session_type` (string) - "study" or "break"
-  - `date` (string) - Date in YYYY-MM-DD format
-  - `created_at` (number) - Timestamp in milliseconds
+- **profiles** - User data with streaks, preferences, student codes, usernames
+- **subjects** - Subject definitions with colors
+- **study_sessions** - Study session records
+- **goals** - Daily and weekly study goals
+- **friends** - Friend requests and relationships
+- **study_groups** - Group information and membership
+- **group_messages** - Real-time group chat messages
+- **group_files** - Shared files in groups
 
 ## Contributing
 
-We welcome contributions! Here's how to get started:
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m "feat: description"`
+4. Push to branch: `git push origin feature/your-feature`
+5. Open a Pull Request
 
-1. **Fork the repository** and create a feature branch
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## Roadmap
 
-2. **Make your changes** following our code style:
-   - Use TypeScript for type safety
-   - Follow React best practices (hooks, functional components)
-   - Keep components focused and reusable
-   - Add meaningful comments for complex logic
+### ✅ Completed
+- Study streak tracking
+- Pomodoro timer with presets
+- Dark/Light theme
+- Profile picture upload
+- Study goals and targets
+- Analytics dashboard
+- Study groups and friends
+- Real-time group chat
+- Competitive leaderboards
+- Calendar heatmap
+- Landing page website
+- Username system with validation
 
-3. **Test your changes** locally:
-   ```bash
-   npm run dev
-   ```
-
-4. **Lint and format** your code:
-   ```bash
-   npm run lint
-   ```
-
-5. **Commit with descriptive messages**:
-   ```bash
-   git commit -m "feat: add new feature description"
-   ```
-
-6. **Push to your fork and create a Pull Request**
-
-### Code Style Guidelines
-
-- Use functional components with hooks
-- Prefer TypeScript interfaces for props
-- Keep components small and focused (under 200 lines when possible)
-- Use descriptive variable and function names
-- Add error handling for async operations
-- Use Firestore real-time listeners for live updates
-
-### Common Tasks
-
-**Adding a new page:**
-1. Create a new file in `src/pages/`
-2. Add the route in `App.tsx`
-3. Import and use the page component
-
-**Creating a new component:**
-1. Create a file in `src/components/`
-2. Use functional component with TypeScript
-3. Export the component as default
-
-**Adding a UI element:**
-1. Check if shadcn/ui has the component
-2. If yes, import from `@/components/ui/`
-3. If no, build custom with Tailwind CSS
+### 🚀 Upcoming
+- WebRTC for voice/video calls
+- Push notifications
+- Achievements and badges
+- Study habit insights
+- Collaborative study sessions
+- Mobile app
 
 ## Troubleshooting
 
-**"No document to update" error**
-- Ensure the Firestore document exists
-- Check that the user UID matches the document ID
-- Verify Firestore security rules allow the operation
-
 **"The query requires an index" error**
-- Firebase will provide a link to create the index
-- Create the composite index as suggested
-- Indexes may take 1-2 minutes to build
+- See [FIRESTORE_INDEXES.md](./FIRESTORE_INDEXES.md)
+- Click the error link to create the index
 
-**Student code shows "Generating..."**
+**Messages not appearing in chat**
+- Verify Firestore indexes are created
 - Check browser console for errors
-- Verify Firebase config is correct in `.env`
-- Clear browser cache and refresh
+- Ensure group membership is correct
+
+**Profile picture not uploading**
+- Check file size (max 10MB)
+- Verify Storage rules are set correctly
+- Check Firebase Storage quota
 
 ## License
 
-This project is open source and available under the MIT License.
+MIT License - See LICENSE file for details
 
 ## Support
 
 For issues or questions:
-1. Check existing GitHub issues
-2. Review Firebase documentation: https://firebase.google.com/docs
-3. Check TypeScript documentation: https://www.typescriptlang.org/docs/
-
-## Roadmap
-
-### ✅ Completed Features
-- Study streak tracking with current/all-time display
-- Pomodoro timer presets (15/25/50 min study, 5/15 min breaks)
-- Dark/Light theme toggle with system detection
-- Profile picture upload with avatar initials fallback
-
-### 🚀 Upcoming Features
-- Study goals and targets (daily/weekly goals per subject)
-- Weekly study reports with analytics and visualizations
-- Subject-specific analytics (total hours, session count, averages)
-- Mobile app (React Native) with code sharing architecture
+- Check GitHub Issues
+- Review [Firebase Documentation](https://firebase.google.com/docs)
+- Check [TypeScript Documentation](https://www.typescriptlang.org/docs)

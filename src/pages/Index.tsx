@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users } from "lucide-react";
+import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -26,6 +26,7 @@ const Index = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,8 +68,18 @@ const Index = () => {
       console.log('Fetching profile for userId:', userId, 'exists:', docSnap.exists());
       
       if (docSnap.exists()) {
-        console.log('Profile found:', docSnap.data());
-        setProfile(docSnap.data());
+        const profileData = docSnap.data();
+        console.log('Profile found:', profileData);
+        
+        // If student_code is missing, generate one
+        if (!profileData.student_code) {
+          console.log('Student code missing, generating one...');
+          const studentCode = await generateStudentCode();
+          await setDoc(docRef, { ...profileData, student_code: studentCode }, { merge: true });
+          profileData.student_code = studentCode;
+        }
+        
+        setProfile(profileData);
       } else if (retries > 0) {
         console.log('Profile not found, retrying... attempts left:', retries);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -79,13 +90,22 @@ const Index = () => {
         const defaultProfile = {
           user_id: userId,
           full_name: null,
+          email: null,
+          username: null,
           phone: null,
           student_code: studentCode,
+          profile_picture_url: null,
           created_at: new Date().getTime(),
+          updated_at: new Date().getTime(),
           current_streak: 0,
           longest_streak: 0,
           last_study_date: null,
-          theme: 'light',
+          theme: 'system',
+          daily_goal_minutes: 60,
+          weekly_goal_minutes: 300,
+          preferred_session_duration: 25,
+          notifications_enabled: true,
+          onboarding_completed: false,
         };
         await setDoc(docRef, defaultProfile);
         console.log('Default profile created:', defaultProfile);
@@ -134,18 +154,29 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5">
-      <nav className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <nav className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             StudyTracker
           </h1>
-          <div className="flex items-center gap-3">
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
             {profile ? (
-              <Card className="px-4 py-2 flex items-center gap-2 border-border/50">
+              <Card className="px-3 py-2 flex items-center gap-2 border-border/50 text-sm">
                 <div>
-                  <p className="text-sm text-muted-foreground">Student Code</p>
-                  <p className="font-mono font-semibold text-primary">{profile.student_code || 'Generating...'}</p>
+                  <p className="text-xs text-muted-foreground">Student Code</p>
+                  <p className="font-mono font-semibold text-primary flex items-center gap-1">
+                    {profile.student_code ? (
+                      profile.student_code
+                    ) : (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Generating...
+                      </>
+                    )}
+                  </p>
                 </div>
                 <Button
                   size="icon"
@@ -195,12 +226,108 @@ const Index = () => {
               Sign Out
             </Button>
           </div>
+
+          {/* Mobile Navigation */}
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="h-10 w-10"
+            >
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border/50 bg-card/80 backdrop-blur-sm">
+            <div className="container mx-auto px-4 py-4 space-y-2">
+              {profile ? (
+                <Card className="px-3 py-2 flex items-center justify-between border-border/50 mb-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Student Code</p>
+                    <p className="font-mono font-semibold text-primary text-sm flex items-center gap-1">
+                      {profile.student_code ? (
+                        profile.student_code
+                      ) : (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Generating...
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={copyStudentCode}
+                    className="h-8 w-8"
+                    disabled={!profile.student_code}
+                  >
+                    {codeCopied ? (
+                      <Check className="h-4 w-4 text-success" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </Card>
+              ) : null}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigate("/groups");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full justify-start border-border/50"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Groups
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigate("/analytics");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full justify-start border-border/50"
+              >
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigate("/profile");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full justify-start border-border/50"
+              >
+                <UserIcon className="mr-2 h-4 w-4" />
+                Profile
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="w-full justify-start border-border/50 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        )}
       </nav>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {profile && (
               <StreakDisplay 
                 currentStreak={profile.current_streak || 0}
@@ -215,7 +342,7 @@ const Index = () => {
             <StudyHistory userId={user.uid} />
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             <SubjectManager
               userId={user.uid}
               onSelectSubject={setSelectedSubject}
