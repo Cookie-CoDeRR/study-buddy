@@ -291,7 +291,7 @@ export function GroupChat() {
   if (group && groupId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-2 pb-40">
-        <div className="mx-auto space-y-2 px-4 md:px-2 lg:px-96">
+        <div className="mx-auto space-y-2 px-1">
           {/* Header */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
