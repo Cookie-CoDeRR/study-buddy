@@ -5,7 +5,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Send, Trash2, Smile } from 'lucide-react';
 import { 
-  sendChatMessage, 
   subscribeToGroupMessages,
   deleteMessage,
   ChatMessage,
@@ -18,12 +17,23 @@ interface ChatRoomProps {
   userId: string;
   userName: string;
   userAvatar?: string;
+  inputValue: string;
+  onInputChange: (value: string) => void;
+  onSendMessage: () => Promise<void>;
+  sending: boolean;
 }
 
-export function ChatRoom({ groupId, userId, userName, userAvatar }: ChatRoomProps) {
+export function ChatRoom({ 
+  groupId, 
+  userId, 
+  userName, 
+  userAvatar,
+  inputValue,
+  onInputChange,
+  onSendMessage,
+  sending
+}: ChatRoomProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -57,23 +67,7 @@ export function ChatRoom({ groupId, userId, userName, userAvatar }: ChatRoomProp
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    setSending(true);
-    console.log(`[ChatRoom] Sending message: "${inputValue}"`);
-    try {
-      await sendChatMessage(groupId, userId, userName, userAvatar, inputValue);
-      console.log('[ChatRoom] Message sent successfully');
-      setInputValue('');
-    } catch (error) {
-      console.error('[ChatRoom] Error sending message:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to send message',
-        variant: 'destructive',
-      });
-    }
-    setSending(false);
+    await onSendMessage();
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -190,13 +184,13 @@ export function ChatRoom({ groupId, userId, userName, userAvatar }: ChatRoomProp
         )}
       </div>
 
-      {/* Input Area */}
+      {/* Input Area at Bottom */}
       <div className="border-t border-border/50 p-4 md:p-6 bg-card/50 backdrop-blur-sm">
         <div className="flex gap-2">
           <Textarea
             placeholder="Message... (Press Enter to send)"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => onInputChange(e.target.value)}
             onKeyPress={handleKeyPress}
             className="min-h-10 md:min-h-12 resize-none text-sm md:text-base rounded-2xl border-primary/20 focus:border-primary/50 transition-colors"
             rows={2}

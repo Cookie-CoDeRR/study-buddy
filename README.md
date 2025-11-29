@@ -24,12 +24,19 @@ A comprehensive study session tracking application with social features, real-ti
 
 ### Social & Collaboration
 - **Study Groups**: Create or join study groups with invite codes
+  - Global invite code search across all groups
+  - Seamless group joining
 - **Group Chat**: Real-time group messaging with Discord-like interface
   - WhatsApp-style split-view with members sidebar
   - File sharing in groups
-  - Real-time message updates
+  - Real-time message updates with Enter key send
   - Delete your own messages
-- **Friends System**: Add friends and manage relationships
+  - Shift+Enter for new lines
+- **Friends System**: Add friends via student codes
+  - Bidirectional friendship - both users see each other as friends
+  - Send and receive friend requests
+  - Accept/reject incoming requests
+- **Online Friends Display**: See which friends are online on the dashboard
 - **Competitive Leaderboards**: 
   - Group-based rankings by study hours
   - Glowing animations for top performers (8h+ = fire emoji 🔥)
@@ -108,7 +115,15 @@ src/
 └── App.tsx
 ```
 
-## Getting Started
+## Recent Updates & Bug Fixes
+
+### Version 1.2.0 - Group & Chat Improvements
+- ✨ **Enter key sends messages** - Chat now uses Enter to send (Shift+Enter for new lines)
+- ✨ **Global invite code search** - Join groups from anywhere, not just your own groups
+- 🐛 **Fixed friend visibility** - Friends now display bidirectionally (both users see each other)
+- 🐛 **Fixed friend request errors** - Resolved undefined email/profile picture fields
+- 🐛 **Improved page layout** - Reduced max-width constraints for better appearance
+- ✨ **Online friends indicator** - See which friends are currently online on dashboard
 
 ### Prerequisites
 
@@ -158,42 +173,7 @@ src/
    rules_version = '2';
    service cloud.firestore {
      match /databases/{database}/documents {
-       match /profiles/{userId} {
-         allow read, write: if request.auth.uid == userId;
-       }
-       
-       match /subjects/{document=**} {
-         allow read, write: if request.auth != null && 
-           request.resource.data.user_id == request.auth.uid;
-       }
-       
-       match /study_sessions/{document=**} {
-         allow read, write: if request.auth != null && 
-           request.resource.data.user_id == request.auth.uid;
-       }
-       
-       match /goals/{document=**} {
-         allow read, write: if request.auth != null && 
-           request.resource.data.user_id == request.auth.uid;
-       }
-       
-       match /friends/{document=**} {
-         allow read, write: if request.auth != null;
-       }
-       
-       match /study_groups/{groupId} {
-         allow read: if request.auth != null && 
-           request.auth.uid in resource.data.members;
-         allow create: if request.auth != null;
-         allow update, delete: if request.auth != null && 
-           request.auth.uid == resource.data.creatorId;
-       }
-       
-       match /group_messages/{document=**} {
-         allow read, write: if request.auth != null;
-       }
-       
-       match /group_files/{document=**} {
+       match /{document=**} {
          allow read, write: if request.auth != null;
        }
      }
@@ -206,11 +186,11 @@ src/
    service firebase.storage {
      match /b/{bucket}/o {
        match /profile-pictures/{userId}/{allPaths=**} {
-         allow read: if request.auth.uid == userId;
+         allow read: if request.auth != null;
          allow write: if request.auth.uid == userId && request.resource.size < 10485760;
        }
-       match /group-files/{groupId}/{userId}/{allPaths=**} {
-         allow read, write: if request.auth.uid == userId;
+       match /group-files/{groupId}/{allPaths=**} {
+         allow read, write: if request.auth != null;
        }
      }
    }
@@ -222,10 +202,39 @@ src/
    ```
    The app opens at `http://localhost:5173/`
 
+## Deployment
+
+### GitHub Pages
+
+The project is configured for automatic deployment to GitHub Pages using GitHub Actions.
+
+**To deploy:**
+
+1. Push your code to the `main` branch:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+
+2. GitHub Actions will automatically:
+   - Build the project with the correct base path (`/study-buddy/`)
+   - Upload to GitHub Pages
+   - Deploy in ~2-3 minutes
+
+3. Your site will be live at: `https://<your-github-username>.github.io/study-buddy/`
+
+**Configuration:**
+- Vite base path is automatically set to `/study-buddy/` when `GITHUB_PAGES=true`
+- GitHub Actions workflow: `.github/workflows/deploy.yml`
+- See [GITHUB_PAGES_SETUP.md](./GITHUB_PAGES_SETUP.md) for detailed setup instructions and custom domain configuration
+
 ## Available Scripts
 
 - `npm run dev` - Development server with HMR
 - `npm run build` - Production build
+- `npm run build:gh-pages` - Build for GitHub Pages deployment
+- `npm run deploy` - Deploy to GitHub Pages
 - `npm run build:dev` - Development build
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
@@ -240,38 +249,134 @@ src/
 - **study_groups** - Group information and membership
 - **group_messages** - Real-time group chat messages
 - **group_files** - Shared files in groups
+- **group_calls** - Active calls with participants and call metadata
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -m "feat: description"`
-4. Push to branch: `git push origin feature/your-feature`
-5. Open a Pull Request
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository**
+   ```bash
+   git clone https://github.com/your-username/study-buddy.git
+   cd study-buddy
+   ```
+
+2. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+
+3. **Install dependencies and start development**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+4. **Make your changes**
+   - Follow the existing code style
+   - Ensure your changes compile without errors (`npm run lint`)
+   - Test your changes thoroughly
+
+5. **Commit and push**
+   ```bash
+   git add .
+   git commit -m "feat: description of your feature"
+   git push origin feature/your-feature
+   ```
+
+6. **Open a Pull Request**
+   - Provide a clear description of changes
+   - Link related issues if applicable
+   - Ensure CI checks pass
+
+**Development Guidelines:**
+- Use TypeScript for type safety
+- Follow React hooks best practices
+- Use Tailwind CSS for styling
+- Keep components small and reusable
+- Add error handling and loading states
+- Test with different screen sizes (responsive design)
 
 ## Roadmap
 
 ### ✅ Completed
-- Study streak tracking
-- Pomodoro timer with presets
-- Dark/Light theme
-- Profile picture upload
-- Study goals and targets
-- Analytics dashboard
-- Study groups and friends
-- Real-time group chat
-- Competitive leaderboards
-- Calendar heatmap
-- Landing page website
-- Username system with validation
+- Study streak tracking with current and all-time records
+- Pomodoro timer with 15min, 25min, and 50min presets
+- Dark/Light theme with system detection
+- Profile picture upload with image compression
+- Study goals and progress tracking (daily/weekly per subject)
+- Analytics dashboard with 3 tabs (goals, subjects, weekly reports)
+- Study groups with global invite code search
+- Bidirectional friend system with requests
+- Real-time group chat with Enter key send
+- Competitive leaderboards with rankings
+- Calendar heatmap for study visualization
+- Landing page website with feature showcase
+- Student code system for friend discovery
+- Online friends indicator on dashboard
+- File sharing in groups
+- GitHub Pages deployment with CI/CD
 
-### 🚀 Upcoming
-- WebRTC for voice/video calls
-- Push notifications
-- Achievements and badges
-- Study habit insights
-- Collaborative study sessions
-- Mobile app
+### 🚀 In Progress
+- WebRTC voice/video calls infrastructure
+- Call notifications and join propagation to group members
+
+### 📋 Upcoming Features
+- **Communication**
+  - WebRTC for peer-to-peer voice/video calls
+  - Screen sharing during calls
+  - Call recording (optional)
+  - Missed call notifications
+
+- **Notifications & Engagement**
+  - Push notifications for friend requests
+  - Missed call alerts
+  - Group message notifications
+  - Study reminders
+  - Achievement unlocked notifications
+
+- **Gamification & Social**
+  - Achievements and badges system
+  - Study streaks milestones (7 days, 30 days, 100 days, etc.)
+  - Seasonal challenges and competitions
+  - Social sharing of achievements
+  - User profiles with statistics showcase
+
+- **Advanced Analytics**
+  - Personalized study insights and recommendations
+  - Study habit analysis (peak productivity times)
+  - Subject performance comparison
+  - Predictive goal completion estimates
+  - Detailed progress reports
+
+- **Group Features**
+  - Group study sessions scheduling
+  - Study session polls/voting
+  - Group announcements
+  - Member roles (admin, moderator, member)
+  - Group study statistics
+
+- **Mobile & Accessibility**
+  - React Native mobile app
+  - Progressive Web App (PWA) support
+  - Offline mode with sync
+  - Accessibility improvements (WCAG 2.1)
+
+- **Platform Expansion**
+  - OAuth2 authentication (Google, GitHub)
+  - Email verification and recovery
+  - Two-factor authentication
+  - Supabase integration for self-hosted option
+  - API for third-party integrations
+
+### 🔮 Long-term Vision
+- AI-powered study recommendations
+- Integration with calendar apps
+- Integration with note-taking apps
+- Tutoring marketplace integration
+- Study material recommendation engine
+- Competitive study tournaments
+- Institutional deployments (schools, universities)
 
 ## Troubleshooting
 

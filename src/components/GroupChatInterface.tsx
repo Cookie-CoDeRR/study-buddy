@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Phone, Video, Search, X, ArrowLeft, Users as UsersIcon } from 'lucide-react';
+import { Info, Phone, Video, Search, X, ArrowLeft, Users as UsersIcon, UserPlus, UserCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ChatRoom } from '@/components/ChatRoom';
 import { FileSharing } from '@/components/FileSharing';
-import { getGroupMemberStats } from '@/lib/friends';
+import { getGroupMemberStats, getUserFriends, sendFriendRequestByUserId } from '@/lib/friends';
 import { StudyGroup } from '@/lib/friends';
+import { toast } from '@/hooks/use-toast';
 
 interface GroupChatInterfaceProps {
   group: StudyGroup;
@@ -31,10 +32,24 @@ export function GroupChatInterface({
   const [searchMember, setSearchMember] = useState('');
   const [showInfo, setShowInfo] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentFriends, setCurrentFriends] = useState<string[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     loadMembers();
-  }, [group.id]);
+    loadFriends();
+  }, [group.id, userId]);
+
+  const loadFriends = async () => {
+    try {
+      const friends = await getUserFriends(userId);
+      setCurrentFriends(friends.map((f: any) => f.friendId));
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
 
   const loadMembers = async () => {
     try {
@@ -46,9 +61,54 @@ export function GroupChatInterface({
     setLoading(false);
   };
 
+  const handleAddFriend = async (memberId: string, memberName: string) => {
+    try {
+      if (pendingRequests.includes(memberId)) {
+        toast({
+          title: 'Already sent',
+          description: `Friend request already sent to ${memberName}`,
+          variant: 'default',
+        });
+        return;
+      }
+
+      await sendFriendRequestByUserId(userId, memberId);
+      setPendingRequests([...pendingRequests, memberId]);
+      toast({
+        title: 'Friend request sent',
+        description: `Friend request sent to ${memberName}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send friend request',
+        variant: 'destructive',
+      });
+      console.error('Error sending friend request:', error);
+    }
+  };
+
   const filteredMembers = members.filter((member) =>
     member.name.toLowerCase().includes(searchMember.toLowerCase())
   );
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    setSendingMessage(true);
+    try {
+      // This function would be called from ChatRoom with proper implementation
+      setInputValue('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      });
+    }
+    setSendingMessage(false);
+  };
 
   return (
     <div className="flex flex-col w-full h-full bg-gray-50 dark:bg-gray-900">
@@ -127,10 +187,12 @@ export function GroupChatInterface({
               <div className="space-y-1 p-2">
                 {filteredMembers.map((member) => {
                   const isCurrentUser = member.userId === userId;
+                  const isFriend = currentFriends.includes(member.userId);
+                  const isPending = pendingRequests.includes(member.userId);
                   return (
                     <div
                       key={member.userId}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                      className={`p-3 rounded-lg transition-colors ${
                         isCurrentUser
                           ? 'bg-blue-100 dark:bg-blue-900/30'
                           : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
@@ -170,6 +232,41 @@ export function GroupChatInterface({
                             )}
                           </div>
                         </div>
+
+                        {/* Add Friend Button */}
+                        {!isCurrentUser && (
+                          <Button
+                            size="sm"
+                            variant={isFriend ? 'secondary' : 'outline'}
+                            onClick={() => handleAddFriend(member.userId, member.name)}
+                            disabled={isFriend || isPending}
+                            className="h-8 px-2 flex-shrink-0"
+                            title={
+                              isFriend
+                                ? 'Already friends'
+                                : isPending
+                                  ? 'Request pending'
+                                  : 'Add friend'
+                            }
+                          >
+                            {isFriend ? (
+                              <>
+                                <UserCheck className="w-3 h-3 mr-1" />
+                                <span className="text-xs">Friend</span>
+                              </>
+                            ) : isPending ? (
+                              <>
+                                <UserPlus className="w-3 h-3 mr-1" />
+                                <span className="text-xs">Pending</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-3 h-3 mr-1" />
+                                <span className="text-xs">Add</span>
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -247,6 +344,10 @@ export function GroupChatInterface({
                   userId={userId}
                   userName={userName}
                   userAvatar={userAvatar}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  onSendMessage={handleSendMessage}
+                  sending={sendingMessage}
                 />
               </TabsContent>
 

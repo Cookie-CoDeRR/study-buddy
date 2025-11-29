@@ -11,7 +11,6 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
-import { Groups } from "./pages/Groups";
 import { GroupChat } from "./pages/GroupChat";
 import Website from "./pages/Website";
 import NotFound from "./pages/NotFound";
@@ -52,8 +51,8 @@ const AppRoutes = () => {
         <>
           <Route path="/profile" element={<Profile />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/groups" element={<Groups />} />
-          <Route path="/groups/:groupId/chat" element={<GroupChat />} />
+          <Route path="/chat" element={<GroupChat />} />
+          <Route path="/chat/:groupId" element={<GroupChat />} />
         </>
       )}
 

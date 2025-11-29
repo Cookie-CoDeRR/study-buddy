@@ -431,3 +431,50 @@ export async function leaveStudyGroup(groupId: string, userId: string): Promise<
     throw error;
   }
 }
+
+/**
+ * Send friend request by userId (for chat interface)
+ */
+export async function sendFriendRequestByUserId(
+  fromUserId: string,
+  toUserId: string
+): Promise<void> {
+  try {
+    // Get the recipient's user data
+    const profileRef = doc(db, 'profiles', toUserId);
+    const profileDoc = await getDoc(profileRef);
+
+    if (!profileDoc.exists()) {
+      throw new Error('User not found');
+    }
+
+    const userData = profileDoc.data();
+
+    // Check if already friends or request pending
+    const friendQ = query(
+      collection(db, 'friends'),
+      where('userId', '==', fromUserId),
+      where('friendUserId', '==', toUserId)
+    );
+    const friendSnapshot = await getDocs(friendQ);
+
+    if (!friendSnapshot.empty) {
+      throw new Error('Friend request already exists');
+    }
+
+    // Create friend request
+    await addDoc(collection(db, 'friends'), {
+      userId: fromUserId,
+      friendUserId: toUserId,
+      friendName: userData.full_name || 'Unknown User',
+      friendEmail: userData.email || '',
+      friendStudentCode: userData.student_code || '',
+      friendProfilePicture: userData.profile_picture_url || '',
+      status: 'pending',
+      createdAt: new Date().getTime(),
+    });
+  } catch (error) {
+    console.error('Error sending friend request:', error);
+    throw error;
+  }
+}

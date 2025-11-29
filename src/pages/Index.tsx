@@ -209,7 +209,7 @@ const Index = () => {
             ) : null}
             <Button
               variant="outline"
-              onClick={() => navigate("/groups")}
+              onClick={() => navigate("/chat")}
               className="border-border/50 hover:bg-primary/10 hover:border-primary/50"
             >
               <Users className="mr-2 h-4 w-4" />
@@ -296,7 +296,7 @@ const Index = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  navigate("/groups");
+                  navigate("/chat");
                   setMobileMenuOpen(false);
                 }}
                 className="w-full justify-start border-border/50"
@@ -384,7 +384,7 @@ const Index = () => {
 
                 {friends.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground rounded-lg bg-secondary/50">
-                    <p className="text-sm">No friends yet. Add friends using their student code in Groups!</p>
+                    <p className="text-sm">No friends yet. Add friends using their student code in Groups section!</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -417,7 +417,7 @@ const Index = () => {
                 <Button
                   variant="outline"
                   className="w-full rounded-lg border-primary/20 hover:bg-primary/5"
-                  onClick={() => navigate("/groups")}
+                  onClick={() => navigate("/chat")}
                 >
                   Manage Friends
                   <Users className="ml-2 h-4 w-4" />

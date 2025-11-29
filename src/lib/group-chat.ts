@@ -317,3 +317,149 @@ export function formatFileSize(bytes: number): string {
 export function getFileExtension(fileName: string): string {
   return fileName.split('.').pop()?.toLowerCase() || 'file';
 }
+
+/**
+ * Initiate a call in the group
+ */
+export async function initiateGroupCall(
+  groupId: string,
+  callerId: string,
+  callerName: string,
+  callType: 'audio' | 'video' = 'audio'
+): Promise<string> {
+  try {
+    const callData = {
+      groupId,
+      callerId,
+      callerName,
+      callType,
+      status: 'initiated',
+      createdAt: Timestamp.now(),
+      participants: [callerId],
+    };
+    
+    const docRef = await addDoc(collection(db, 'group_calls'), callData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error initiating call:', error);
+    throw error;
+  }
+}
+
+/**
+ * Add participant to call
+ */
+export async function addCallParticipant(
+  callId: string,
+  userId: string
+): Promise<void> {
+  try {
+    const callRef = doc(db, 'group_calls', callId);
+    const callDoc = await getDocs(query(collection(db, 'group_calls'), where('__name__', '==', callId)));
+    
+    if (!callDoc.empty) {
+      const participants = callDoc.docs[0].data().participants || [];
+      if (!participants.includes(userId)) {
+        participants.push(userId);
+        await addDoc(collection(db, `group_calls/${callId}/participants`), {
+          userId,
+          joinedAt: Timestamp.now(),
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error adding call participant:', error);
+    throw error;
+  }
+}
+
+/**
+ * Subscribe to active calls in a group
+ */
+export function subscribeToGroupCalls(
+  groupId: string,
+  callback: (calls: any[]) => void
+): () => void {
+  try {
+    const q = query(
+      collection(db, 'group_calls'),
+      where('groupId', '==', groupId),
+      where('status', '==', 'initiated'),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const calls: any[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          calls.push({
+            id: doc.id,
+            groupId: data.groupId,
+            callerId: data.callerId,
+            callerName: data.callerName,
+            callType: data.callType,
+            status: data.status,
+            participants: data.participants || [],
+            createdAt: data.createdAt?.toMillis?.() || data.createdAt,
+          });
+        });
+
+        callback(calls);
+      },
+      (error) => {
+        console.error('Error subscribing to calls:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up call subscription:', error);
+    return () => {};
+  }
+}
+
+/**
+ * Subscribe to call participants
+ */
+export function subscribeToCallParticipants(
+  callId: string,
+  callback: (participants: any[]) => void
+): () => void {
+  try {
+    const q = query(
+      collection(db, `group_calls/${callId}/participants`),
+      orderBy('joinedAt', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const participants: any[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          participants.push({
+            userId: data.userId,
+            joinedAt: data.joinedAt?.toMillis?.() || data.joinedAt,
+          });
+        });
+
+        callback(participants);
+      },
+      (error) => {
+        console.error('Error subscribing to participants:', error);
+        callback([]);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up participants subscription:', error);
+    return () => {};
+  }
+}
