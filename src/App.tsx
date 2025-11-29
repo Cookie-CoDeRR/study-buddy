@@ -64,7 +64,7 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  const basename = import.meta.env.GITHUB_PAGES ? '/study-buddy' : '/';
+  const basename = '/study-buddy';
   
   useEffect(() => {
     // Handle 404.html redirect from GitHub Pages
