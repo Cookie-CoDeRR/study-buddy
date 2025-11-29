@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/integrations/firebase/client";
+import { useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -64,6 +65,21 @@ const AppRoutes = () => {
 
 const App = () => {
   const basename = import.meta.env.GITHUB_PAGES ? '/study-buddy' : '/';
+  
+  useEffect(() => {
+    // Handle 404.html redirect from GitHub Pages
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('p');
+    
+    if (redirect) {
+      window.history.replaceState(
+        null,
+        null,
+        basename + redirect + (params.get('q') ? '?' + decodeURIComponent(params.get('q')!).replace(/~and~/g, '&') : '') +
+        window.location.hash
+      );
+    }
+  }, [basename]);
   
   return (
     <QueryClientProvider client={queryClient}>
