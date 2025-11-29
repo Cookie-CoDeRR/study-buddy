@@ -39,11 +39,11 @@ export function ProfilePictureUploader({
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: 'File too large',
-        description: 'Please select an image smaller than 5MB',
+        description: 'Please select an image smaller than 10MB',
         variant: 'destructive',
       });
       return;
@@ -66,6 +66,7 @@ export function ProfilePictureUploader({
         description: 'Profile picture updated successfully',
       });
     } catch (error: any) {
+      console.error('Upload error:', error);
       toast({
         title: 'Upload failed',
         description: error.message || 'Failed to upload profile picture',
@@ -104,7 +105,7 @@ export function ProfilePictureUploader({
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-border/50 hover-lift transition-smooth animate-slide-up">
+    <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-border/50 hover-lift md-elevate transition-smooth animate-slide-up">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold animate-slide-down">Profile Picture</h3>
 
@@ -136,7 +137,7 @@ export function ProfilePictureUploader({
               {isLoading ? 'Uploading...' : 'Change Picture'}
             </Button>
 
-            {preview && (
+            {preview && !isLoading && (
               <Button
                 onClick={handleDelete}
                 disabled={isLoading}
@@ -149,7 +150,7 @@ export function ProfilePictureUploader({
             )}
 
             <p className="text-xs text-muted-foreground">
-              Max size: 5MB. Formats: JPG, PNG, GIF
+              Max size: 10MB. Formats: JPG, PNG, GIF
             </p>
           </div>
         </div>

@@ -138,7 +138,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
   };
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-timer-bg to-card border-border/50 shadow-xl hover-lift transition-smooth animate-slide-up">
+    <Card className="p-8 bg-gradient-to-br from-timer-bg to-card border-border/50 shadow-xl hover-lift md-elevate transition-smooth animate-slide-up">
       <div className="text-center space-y-6">
         <div className="flex items-center justify-center gap-3 mb-4">
           {isBreak ? (

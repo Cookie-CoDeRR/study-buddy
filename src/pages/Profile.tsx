@@ -90,7 +90,9 @@ const Profile = () => {
   const handleProfilePictureUpload = async (file: File): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
 
+    console.log('Profile upload started for user:', user.uid);
     const url = await uploadProfilePicture(user.uid, file);
+    console.log('Upload successful, URL:', url);
 
     // Save the URL to the profile
     const docRef = doc(db, 'profiles', user.uid);
@@ -98,6 +100,7 @@ const Profile = () => {
       profile_picture_url: url,
     }, { merge: true });
 
+    await fetchProfile(user.uid);
     return url;
   };
 

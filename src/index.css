@@ -1,9 +1,9 @@
+/* Import custom animations first */
+@import './animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import custom animations */
-@import './animations.css';
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.

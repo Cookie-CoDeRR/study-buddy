@@ -204,6 +204,165 @@
   transform: scale(1.08);
 }
 
+/* Glowing fire animations based on study intensity */
+@keyframes glow-subtle {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5), 0 0 30px rgba(6, 182, 212, 0.2);
+  }
+}
+
+@keyframes glow-moderate {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.6), 0 0 40px rgba(139, 92, 246, 0.3);
+  }
+}
+
+@keyframes glow-bright {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(250, 204, 21, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(250, 204, 21, 0.7), 0 0 50px rgba(250, 204, 21, 0.3);
+  }
+}
+
+@keyframes glow-fire {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(239, 68, 68, 0.6), 
+      0 0 40px rgba(239, 68, 68, 0.3),
+      0 0 60px rgba(251, 146, 60, 0.2),
+      0 0 80px rgba(251, 146, 60, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(239, 68, 68, 0.8),
+      0 0 50px rgba(239, 68, 68, 0.5),
+      0 0 80px rgba(251, 146, 60, 0.4),
+      0 0 100px rgba(251, 146, 60, 0.2);
+  }
+}
+
+@keyframes fire-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.glow-subtle {
+  animation: glow-subtle 2s ease-in-out infinite;
+}
+
+.glow-moderate {
+  animation: glow-moderate 1.8s ease-in-out infinite;
+}
+
+.glow-bright {
+  animation: glow-bright 1.6s ease-in-out infinite;
+}
+
+.glow-fire {
+  animation: glow-fire 1.4s ease-in-out infinite, fire-pulse 1.4s ease-in-out infinite;
+}
+
+/* Additional text glow variants */
+.text-glow-subtle {
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.text-glow-moderate {
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.text-glow-bright {
+  text-shadow: 0 0 16px rgba(250, 204, 21, 0.6);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.text-glow-fire {
+  text-shadow: 
+    0 0 12px rgba(239, 68, 68, 0.7),
+    0 0 24px rgba(251, 146, 60, 0.4);
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Material Motion variables (modern / M3 inspired) */
+:root {
+  --motion-duration-short: 200ms;
+  --motion-duration-medium: 380ms;
+  --motion-duration-long: 600ms;
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1); /* M3 emphasis */
+  --motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Override common animation utilities to use M3 variables for a more fluid feel */
+.animate-slide-up {
+  animation: slideInUp var(--motion-duration-medium) var(--motion-easing-standard);
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--motion-duration-short) var(--motion-easing-standard);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--motion-duration-short) var(--motion-easing-emphasized);
+}
+
+.animate-streak-pop {
+  animation: streak-pop var(--motion-duration-short) var(--motion-easing-emphasized);
+}
+
+/* Respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-slide-left,
+  .animate-slide-right,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-zoom-in,
+  .animate-flip,
+  .animate-rotate,
+  .animate-bounce-light,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-streak-pop,
+  .animate-spin-slow,
+  .animate-wiggle,
+  .animate-shimmer,
+  .animate-stagger > * {
+    animation: none !important;
+  }
+
+  * {
+    transition: none !important;
+  }
+}
+
+/* Small utility for subtle elevation motion (Material-like) */
+.md-elevate {
+  transition: transform var(--motion-duration-medium) var(--motion-easing-standard),
+    box-shadow var(--motion-duration-medium) var(--motion-easing-standard);
+}
+
+.md-elevate:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
 /* Utility classes for animations */
 .animate-slide-up {
   animation: slideInUp 0.5s ease-out;

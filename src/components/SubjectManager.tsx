@@ -121,7 +121,7 @@ const SubjectManager = ({ userId, onSelectSubject, selectedSubject }: SubjectMan
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 border-border/50 shadow-xl hover-lift transition-smooth animate-slide-up">
+      <Card className="p-6 border-border/50 shadow-xl hover-lift md-elevate transition-smooth animate-slide-up">
         <h3 className="text-lg font-semibold mb-4">Add New Subject</h3>
         <form onSubmit={addSubject} className="space-y-4">
           <Input

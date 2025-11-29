@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Lightbulb } from "lucide-react";
+import { BookOpen, Clock, Lightbulb, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -35,12 +37,50 @@ const Auth = () => {
     return code;
   };
 
+  const checkUsernameAvailability = async (name: string): Promise<boolean> => {
+    if (!name || name.length < 3) return false;
+    
+    try {
+      const profilesRef = collection(db, 'profiles');
+      const q = query(profilesRef, where('username', '==', name.toLowerCase()));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.empty; // true if available, false if taken
+    } catch (error) {
+      console.error('Error checking username:', error);
+      return false;
+    }
+  };
+
+  const handleUsernameChange = async (value: string) => {
+    setUsername(value);
+    
+    if (value.length < 3) {
+      setUsernameStatus('idle');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    const available = await checkUsernameAvailability(value);
+    setUsernameStatus(available ? 'available' : 'taken');
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (isSignUp) {
+        // Validate username
+        if (usernameStatus !== 'available') {
+          toast({
+            title: 'Invalid Username',
+            description: 'Please choose an available username (min 3 characters)',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
         // Create user with Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -48,25 +88,48 @@ const Auth = () => {
         // Generate unique student code
         const studentCode = await generateStudentCode();
 
-        // Create profile document in Firestore
+        // Create comprehensive profile document in Firestore with defaults
         await setDoc(doc(db, 'profiles', user.uid), {
           user_id: user.uid,
           full_name: fullName || null,
+          email: email,
+          username: username.toLowerCase(), // Store lowercase username
           phone: null,
           student_code: studentCode,
+          profile_picture_url: null,
+          
+          // Study streak tracking
+          current_streak: 0,
+          longest_streak: 0,
+          last_study_date: null,
+          
+          // Goals and settings
+          daily_goal_minutes: 60,
+          weekly_goal_minutes: 300,
+          preferred_session_duration: 25, // Pomodoro default
+          
+          // Preferences
+          theme: 'system', // 'light', 'dark', 'system'
+          notifications_enabled: true,
+          
+          // Metadata
           created_at: new Date().getTime(),
+          updated_at: new Date().getTime(),
+          onboarding_completed: false,
         });
 
-        console.log('Profile created with student code:', studentCode);
+        console.log('Profile auto-generated for user:', user.uid, 'with student code:', studentCode, 'and username:', username);
 
         toast({
           title: "Account created!",
-          description: "You can now sign in with your credentials.",
+          description: `Welcome, ${fullName || 'User'}! Your username: @${username}`,
         });
         setIsSignUp(false);
         setEmail("");
         setPassword("");
         setFullName("");
+        setUsername("");
+        setUsernameStatus('idle');
       } else {
         await signInWithEmailAndPassword(auth, email, password);
 
@@ -124,6 +187,48 @@ const Auth = () => {
                 />
               </div>
             )}
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="your_username"
+                    value={username}
+                    onChange={(e) => handleUsernameChange(e.target.value)}
+                    required={isSignUp}
+                    minLength={3}
+                    maxLength={20}
+                    className="border-border/50 pr-10"
+                  />
+                  {username.length > 0 && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {usernameStatus === 'checking' && (
+                        <div className="animate-spin">
+                          <Loader2 className="w-4 h-4 text-gray-400" />
+                        </div>
+                      )}
+                      {usernameStatus === 'available' && (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      )}
+                      {usernameStatus === 'taken' && (
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                      )}
+                    </div>
+                  )}
+                </div>
+                {usernameStatus === 'taken' && (
+                  <p className="text-xs text-red-500">This username is already taken</p>
+                )}
+                {username.length > 0 && username.length < 3 && (
+                  <p className="text-xs text-gray-500">Username must be at least 3 characters</p>
+                )}
+                {usernameStatus === 'available' && (
+                  <p className="text-xs text-green-500">Username is available!</p>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -152,7 +257,7 @@ const Auth = () => {
             <Button 
               type="submit" 
               className="w-full bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20" 
-              disabled={loading}
+              disabled={loading || (isSignUp && usernameStatus !== 'available')}
             >
               {loading ? "Processing..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>

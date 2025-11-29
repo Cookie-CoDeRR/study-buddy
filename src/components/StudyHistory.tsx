@@ -85,7 +85,7 @@ const StudyHistory = ({ userId }: StudyHistoryProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 md-elevate animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary/20 rounded-xl">
               <Clock className="h-5 w-5 text-primary" />
@@ -97,7 +97,7 @@ const StudyHistory = ({ userId }: StudyHistoryProps) => {
           </div>
         </Card>
         
-        <Card className="p-6 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+        <Card className="p-6 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 md-elevate animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-accent/20 rounded-xl">
               <BookOpen className="h-5 w-5 text-accent" />
@@ -109,7 +109,7 @@ const StudyHistory = ({ userId }: StudyHistoryProps) => {
           </div>
         </Card>
         
-        <Card className="p-6 bg-gradient-to-br from-timer-accent/10 to-timer-accent/5 border-timer-accent/20">
+        <Card className="p-6 bg-gradient-to-br from-timer-accent/10 to-timer-accent/5 border-timer-accent/20 md-elevate animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-timer-accent/20 rounded-xl">
               <Coffee className="h-5 w-5 text-timer-accent" />

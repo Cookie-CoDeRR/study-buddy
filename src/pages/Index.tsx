@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LogOut, Copy, Check, User as UserIcon, Flame } from "lucide-react";
+import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -162,6 +162,22 @@ const Index = () => {
                 </Button>
               </Card>
             ) : null}
+            <Button
+              variant="outline"
+              onClick={() => navigate("/groups")}
+              className="border-border/50 hover:bg-primary/10 hover:border-primary/50"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Groups
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/analytics")}
+              className="border-border/50 hover:bg-primary/10 hover:border-primary/50"
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
             <Button
               variant="outline"
               onClick={() => navigate("/profile")}

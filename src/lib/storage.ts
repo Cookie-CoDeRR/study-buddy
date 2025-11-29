@@ -9,19 +9,28 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
  */
 export async function uploadProfilePicture(userId: string, file: File): Promise<string> {
   try {
+    console.log('Starting upload for file:', file.name, 'Size:', file.size);
+    
     const fileExtension = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExtension}`;
     const storageRef = ref(storage, `profile-pictures/${userId}/${fileName}`);
 
+    console.log('Storage ref path:', `profile-pictures/${userId}/${fileName}`);
+
     // Upload the file
     const snapshot = await uploadBytes(storageRef, file);
+    console.log('Upload snapshot:', snapshot);
 
     // Get download URL
     const url = await getDownloadURL(snapshot.ref);
+    console.log('Download URL obtained:', url);
+    
     return url;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading profile picture:', error);
-    throw error;
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
   }
 }
 

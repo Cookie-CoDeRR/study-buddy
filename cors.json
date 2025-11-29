@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:*", "http://127.0.0.1:*"],
+    "method": ["GET", "HEAD", "DELETE", "PUT", "POST", "OPTIONS"],
+    "responseHeader": ["Content-Type", "x-goog-meta-uploaded-content-length"],
+    "maxAgeSeconds": 3600
+  }
+]
