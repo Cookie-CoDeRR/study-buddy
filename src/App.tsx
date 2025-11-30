@@ -67,20 +67,20 @@ const App = () => {
   const basename = '/study-buddy';
   
   useEffect(() => {
-    // Handle 404.html redirect from GitHub Pages
+    // Handle 404.html redirect from GitHub Pages - redirect BEFORE router initializes
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('p');
     const queryString = params.get('q');
     
     if (redirect) {
-      const decodedPath = redirect.split('/').filter(Boolean).join('/')  ;
+      // Remove the query parameters from URL and use the path instead
       const decodedQuery = queryString ? '?' + queryString.replace(/~and~/g, '&') : '';
-      const newUrl = decodedPath + decodedQuery + window.location.hash;
+      const newUrl = redirect + decodedQuery + window.location.hash;
       
       window.history.replaceState(
         null,
         null,
-        newUrl
+        basename + '/' + newUrl
       );
     }
   }, [basename]);
