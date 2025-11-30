@@ -200,10 +200,50 @@
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.hover-scale-modern {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .hover-scale-modern:hover {
   transform: scale(1.08);
 }
 
+/* Wavy circular progress animation */
+@keyframes wave {
+  0% {
+    transform: translateY(0px);
+  }
+  25% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(0px);
+  }
+  75% {
+    transform: translateY(2px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.wave-animate {
+  animation: wave 3s ease-in-out infinite;
+}
+
+/* Circular progress fill animation */
+@keyframes fillProgress {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 100;
+  }
+}
+
+.circular-progress {
+  animation: fillProgress linear forwards;
+}
 /* Glowing fire animations based on study intensity */
 @keyframes glow-subtle {
   0%, 100% {
