@@ -19,6 +19,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
+  const [presetDurationMinutes, setPresetDurationMinutes] = useState<number | null>(null);
   const { toast } = useToast();
 
   const POMODORO_PRESETS = [
@@ -59,7 +60,8 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
     if (!sessionStart || seconds === 0) return;
 
     const endTime = new Date();
-    const durationMinutes = Math.floor(seconds / 60);
+    // Use preset duration if available, otherwise use actual elapsed time
+    const durationMinutes = presetDurationMinutes || Math.floor(seconds / 60);
     const todayDate = format(new Date(), 'yyyy-MM-dd');
 
     try {
@@ -102,6 +104,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
       setSeconds(0);
       setIsRunning(false);
       setSessionStart(null);
+      setPresetDurationMinutes(null);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -116,6 +119,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
     setIsBreak(!isBreak);
     setSeconds(0);
     setSessionStart(null);
+    setPresetDurationMinutes(null);
   };
 
   const applyPreset = (minutes: number, isStudy: boolean) => {
@@ -124,12 +128,14 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
       setSeconds(0);
       setIsRunning(false);
       setSessionStart(null);
+      setPresetDurationMinutes(null);
     }
     
     // Set the new preset time and start immediately
     setSeconds(minutes * 60);
     setIsBreak(!isStudy);
     setSessionStart(new Date());
+    setPresetDurationMinutes(minutes);
     setIsRunning(true);
   };
 
