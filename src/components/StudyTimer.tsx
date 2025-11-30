@@ -119,16 +119,18 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
   };
 
   const applyPreset = (minutes: number, isStudy: boolean) => {
+    // If already running, stop the current session first
     if (isRunning) {
-      toast({
-        title: "Stop the timer first",
-        description: "Please stop the current session before applying a preset.",
-        variant: "destructive",
-      });
-      return;
+      setSeconds(0);
+      setIsRunning(false);
+      setSessionStart(null);
     }
+    
+    // Set the new preset time and start immediately
     setSeconds(minutes * 60);
     setIsBreak(!isStudy);
+    setSessionStart(new Date());
+    setIsRunning(true);
   };
 
   return (
