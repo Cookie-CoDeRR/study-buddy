@@ -6,12 +6,18 @@
     <script type="text/javascript">
       var segmentCount = 0;
       var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        '/study-buddy/?p=/' + l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      // Extract the path after /study-buddy/
+      var pathname = l.pathname;
+      var startIndex = pathname.indexOf('/study-buddy/');
+      if (startIndex !== -1) {
+        var path = pathname.slice(startIndex + 12); // Remove /study-buddy/
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          '/study-buddy/?p=/' + path.split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+          (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      }
     </script>
   </head>
   <body>

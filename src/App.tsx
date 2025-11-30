@@ -70,13 +70,17 @@ const App = () => {
     // Handle 404.html redirect from GitHub Pages
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('p');
+    const queryString = params.get('q');
     
     if (redirect) {
+      const decodedPath = redirect.split('/').filter(Boolean).join('/')  ;
+      const decodedQuery = queryString ? '?' + queryString.replace(/~and~/g, '&') : '';
+      const newUrl = decodedPath + decodedQuery + window.location.hash;
+      
       window.history.replaceState(
         null,
         null,
-        basename + redirect + (params.get('q') ? '?' + decodeURIComponent(params.get('q')!).replace(/~and~/g, '&') : '') +
-        window.location.hash
+        newUrl
       );
     }
   }, [basename]);
