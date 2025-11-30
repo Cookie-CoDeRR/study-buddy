@@ -34,11 +34,29 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
     let interval: NodeJS.Timeout;
     if (isRunning) {
       interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
+        setSeconds((prev) => {
+          // If we have a preset duration, countdown from it; otherwise count up
+          if (presetDurationMinutes) {
+            const presetSeconds = presetDurationMinutes * 60;
+            // Count down
+            if (prev <= 0) {
+              setIsRunning(false);
+              toast({
+                title: "Time's up!",
+                description: `Your ${isBreak ? "break" : "study"} session is complete!`,
+              });
+              return 0;
+            }
+            return prev - 1;
+          } else {
+            // Count up (for manual timer)
+            return prev + 1;
+          }
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, presetDurationMinutes, isBreak, toast]);
 
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -60,8 +78,17 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
     if (!sessionStart || seconds === 0) return;
 
     const endTime = new Date();
-    // Use preset duration if available, otherwise use actual elapsed time
-    const durationMinutes = presetDurationMinutes || Math.floor(seconds / 60);
+    // Calculate actual elapsed time: if we had a preset, subtract remaining time from it
+    let durationMinutes: number;
+    if (presetDurationMinutes) {
+      const presetSeconds = presetDurationMinutes * 60;
+      const elapsedSeconds = presetSeconds - seconds;
+      durationMinutes = Math.floor(elapsedSeconds / 60);
+    } else {
+      // For manual timer, use actual elapsed time
+      durationMinutes = Math.floor(seconds / 60);
+    }
+    
     const todayDate = format(new Date(), 'yyyy-MM-dd');
 
     try {
