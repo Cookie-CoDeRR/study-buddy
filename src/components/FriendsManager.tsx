@@ -114,8 +114,8 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
         title: 'Success',
         description: 'Friend request accepted!',
       });
-      loadPendingRequests();
-      loadFriends();
+      await loadPendingRequests();
+      await loadFriends();
     } catch (error) {
       toast({
         title: 'Error',
@@ -132,7 +132,7 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
         title: 'Success',
         description: 'Friend request rejected',
       });
-      loadPendingRequests();
+      await loadPendingRequests();
     } catch (error) {
       toast({
         title: 'Error',

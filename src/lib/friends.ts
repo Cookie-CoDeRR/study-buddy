@@ -126,6 +126,18 @@ export async function rejectFriendRequest(friendRequestId: string): Promise<void
 }
 
 /**
+ * Delete/unfriend a friend
+ */
+export async function deleteFriend(friendId: string): Promise<void> {
+  try {
+    await deleteDoc(doc(db, 'friends', friendId));
+  } catch (error) {
+    console.error('Error deleting friend:', error);
+    throw error;
+  }
+}
+
+/**
  * Get all friends (accepted) for a user
  */
 export async function getUserFriends(userId: string): Promise<Friend[]> {
@@ -182,46 +194,36 @@ export async function getUserFriends(userId: string): Promise<Friend[]> {
  */
 export async function getPendingRequests(userId: string): Promise<Friend[]> {
   try {
-    // Get sent requests
+    // Get RECEIVED requests (where user is the friendUserId) - these need to be accepted/rejected
     const q = query(
-      collection(db, 'friends'),
-      where('userId', '==', userId),
-      where('status', '==', 'pending')
-    );
-    const snapshot = await getDocs(q);
-    const requests: Friend[] = [];
-
-    snapshot.forEach((doc) => {
-      requests.push({
-        id: doc.id,
-        ...doc.data(),
-      } as Friend);
-    });
-
-    // Get received requests (where user is the friendUserId)
-    const q2 = query(
       collection(db, 'friends'),
       where('friendUserId', '==', userId),
       where('status', '==', 'pending')
     );
-    const snapshot2 = await getDocs(q2);
+    const snapshot = await getDocs(q);
+    const requestsMap = new Map<string, Friend>(); // Use Map to deduplicate by friendUserId
 
-    snapshot2.forEach((doc) => {
+    snapshot.forEach((doc) => {
       const data = doc.data();
-      requests.push({
-        id: doc.id,
-        userId: data.friendUserId,
-        friendUserId: data.userId,
-        friendName: data.friendName,
-        friendEmail: data.friendEmail,
-        friendStudentCode: data.friendStudentCode,
-        friendProfilePicture: data.friendProfilePicture,
-        status: 'pending',
-        createdAt: data.createdAt,
-      } as Friend);
+      const friendUserId = data.userId;
+      
+      // Only add if we haven't seen this friend before (deduplication)
+      if (!requestsMap.has(friendUserId)) {
+        requestsMap.set(friendUserId, {
+          id: doc.id,
+          userId: data.friendUserId,
+          friendUserId: data.userId,
+          friendName: data.friendName,
+          friendEmail: data.friendEmail,
+          friendStudentCode: data.friendStudentCode,
+          friendProfilePicture: data.friendProfilePicture,
+          status: 'pending',
+          createdAt: data.createdAt,
+        } as Friend);
+      }
     });
 
-    return requests;
+    return Array.from(requestsMap.values());
   } catch (error) {
     console.error('Error getting pending requests:', error);
     throw error;
@@ -491,35 +493,52 @@ export async function getFriendProfileDetails(friendUserId: string): Promise<{
   studentCode: string;
 }> {
   try {
-    // Get profile info
+    // Fetch profile and streak in parallel for faster loading
     const profileRef = doc(db, 'profiles', friendUserId);
-    const profileSnap = await getDoc(profileRef);
+    const streakRef = doc(db, 'streaks', friendUserId);
+    
+    const [profileSnap, streakSnap] = await Promise.all([
+      getDoc(profileRef),
+      getDoc(streakRef),
+    ]);
 
     if (!profileSnap.exists()) {
       throw new Error('Friend profile not found');
     }
 
     const profileData = profileSnap.data();
-
-    // Get streak info
-    const streakRef = doc(db, 'streaks', friendUserId);
-    const streakSnap = await getDoc(streakRef);
     const streakData = streakSnap.exists() ? streakSnap.data() : null;
 
-    // Get today's study time
-    const today = new Date().toISOString().split('T')[0];
-    const historyQ = query(
-      collection(db, 'study_history'),
-      where('userId', '==', friendUserId),
-      where('date', '==', today)
-    );
-    const historySnap = await getDocs(historyQ);
+    // Get today's study time from daily_totals collection (if exists) or calculate from study_history
     let totalTodayMinutes = 0;
-
-    historySnap.forEach((doc) => {
-      const data = doc.data();
-      totalTodayMinutes += data.minutes || 0;
-    });
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Try to get from daily_totals first (faster single document read)
+    try {
+      const dailyTotalRef = doc(db, 'daily_totals', `${friendUserId}_${today}`);
+      const dailyTotalSnap = await getDoc(dailyTotalRef);
+      
+      if (dailyTotalSnap.exists()) {
+        totalTodayMinutes = dailyTotalSnap.data().totalMinutes || 0;
+      } else {
+        // Fallback to querying study_history with limit for faster response
+        const historyQ = query(
+          collection(db, 'study_history'),
+          where('userId', '==', friendUserId),
+          where('date', '==', today)
+        );
+        const historySnap = await getDocs(historyQ);
+        
+        historySnap.forEach((doc) => {
+          const data = doc.data();
+          totalTodayMinutes += data.minutes || 0;
+        });
+      }
+    } catch (error) {
+      // If daily totals fails, just set to 0 and continue
+      console.warn('Error fetching today\'s study time:', error);
+      totalTodayMinutes = 0;
+    }
 
     return {
       name: profileData.full_name || 'Unknown User',

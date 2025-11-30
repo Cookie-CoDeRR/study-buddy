@@ -8,7 +8,10 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X, Loader2, Flame, Clock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X, Loader2, Flame, Clock, Bell, UserPlus, Trash2, ChevronDown } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -16,7 +19,7 @@ import StreakDisplay from "@/components/StreakDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 import { calculateStreak } from "@/lib/streak";
-import { getUserFriends, Friend, getFriendProfileDetails } from "@/lib/friends";
+import { getUserFriends, Friend, getFriendProfileDetails, getPendingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, deleteFriend } from "@/lib/friends";
 
 interface Subject {
   id: string;
@@ -28,11 +31,14 @@ const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [friendDetails, setFriendDetails] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showFriendsModal, setShowFriendsModal] = useState(false);
+  const [friendsModalTab, setFriendsModalTab] = useState<'manage' | 'requests'>('manage');
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -58,8 +64,99 @@ const Index = () => {
     try {
       const userFriends = await getUserFriends(userId);
       setFriends(userFriends);
+      
+      // Load pending requests
+      const requests = await getPendingRequests(userId);
+      setPendingRequests(requests);
     } catch (error) {
       console.error('Error loading friends:', error);
+    }
+  };
+
+  const [studentCode, setStudentCode] = useState('');
+  const [addingFriend, setAddingFriend] = useState(false);
+  const [showAllFriends, setShowAllFriends] = useState(false);
+  const [deletingFriendId, setDeletingFriendId] = useState<string | null>(null);
+
+  const handleAddFriend = async () => {
+    if (!studentCode.trim() || !user) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a student code',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAddingFriend(true);
+    try {
+      await sendFriendRequest(user.uid, user.displayName || 'User', studentCode.trim());
+      toast({
+        title: 'Success',
+        description: 'Friend request sent!',
+      });
+      setStudentCode('');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send friend request',
+        variant: 'destructive',
+      });
+    }
+    setAddingFriend(false);
+  };
+
+  const handleAcceptRequest = async (requestId: string) => {
+    try {
+      await acceptFriendRequest(requestId);
+      toast({
+        title: 'Success',
+        description: 'Friend request accepted!',
+      });
+      await loadFriends(user?.uid || '');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to accept friend request',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      await rejectFriendRequest(requestId);
+      toast({
+        title: 'Success',
+        description: 'Friend request rejected',
+      });
+      await loadFriends(user?.uid || '');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reject friend request',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRemoveFriend = async (friendId: string, friendName: string) => {
+    try {
+      setDeletingFriendId(friendId);
+      await deleteFriend(friendId);
+      toast({
+        title: 'Success',
+        description: `${friendName} removed from friends`,
+      });
+      await loadFriends(user?.uid || '');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove friend',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingFriendId(null);
     }
   };
 
@@ -404,6 +501,20 @@ const Index = () => {
                   </Badge>
                 </div>
 
+                {pendingRequests.length > 0 && (
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-lg border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-900 dark:text-amber-100 animate-pulse"
+                    onClick={() => {
+                      setShowFriendsModal(true);
+                      setFriendsModalTab('requests');
+                    }}
+                  >
+                    <Bell className="w-4 h-4 mr-2" />
+                    {pendingRequests.length} Friend Request{pendingRequests.length !== 1 ? 's' : ''}
+                  </Button>
+                )}
+
                 {friends.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground rounded-lg bg-secondary/50">
                     <p className="text-sm">No friends yet. Add friends using their student code in Groups section!</p>
@@ -440,7 +551,10 @@ const Index = () => {
                 <Button
                   variant="outline"
                   className="w-full rounded-lg border-primary/20 hover:bg-primary/5"
-                  onClick={() => navigate("/chat")}
+                  onClick={() => {
+                    setShowFriendsModal(true);
+                    setFriendsModalTab('manage');
+                  }}
                 >
                   Manage Friends
                   <Users className="ml-2 h-4 w-4" />
@@ -528,6 +642,201 @@ const Index = () => {
               </div>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* Friends Management Modal */}
+      <Dialog open={showFriendsModal} onOpenChange={setShowFriendsModal}>
+        <DialogContent className="w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle>Friends</DialogTitle>
+            <DialogDescription>
+              Add friends and manage friend requests
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={friendsModalTab} onValueChange={(v) => setFriendsModalTab(v as 'manage' | 'requests')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manage">My Friends</TabsTrigger>
+              <TabsTrigger value="requests">
+                Requests
+                {pendingRequests.length > 0 && (
+                  <Badge variant="destructive" className="ml-2 rounded-full">
+                    {pendingRequests.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* My Friends Tab */}
+            <TabsContent value="manage" className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="studentCode">Add Friend</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      id="studentCode"
+                      placeholder="Enter student code..."
+                      value={studentCode}
+                      onChange={(e) => setStudentCode(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddFriend()}
+                    />
+                    <Button
+                      onClick={handleAddFriend}
+                      disabled={addingFriend || !studentCode.trim()}
+                      size="sm"
+                    >
+                      {addingFriend ? 'Adding...' : <UserPlus className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-semibold mb-2">Friends ({friends.length})</h3>
+                  {friends.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No friends yet</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {/* Show first 5 friends */}
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {friends.slice(0, 5).map((friend) => (
+                          <div
+                            key={friend.id}
+                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary transition-colors group"
+                          >
+                            <div 
+                              className="flex-1 min-w-0 flex items-center gap-2 cursor-pointer"
+                              onClick={() => {
+                                handleViewFriendProfile(friend);
+                                setShowFriendsModal(false);
+                              }}
+                            >
+                              <Avatar className="h-8 w-8 flex-shrink-0">
+                                <AvatarImage src={friend.friendProfilePicture} />
+                                <AvatarFallback className="text-xs">
+                                  {friend.friendName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{friend.friendName}</p>
+                                <p className="text-xs text-muted-foreground truncate">@{friend.friendStudentCode}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveFriend(friend.id, friend.friendName)}
+                              disabled={deletingFriendId === friend.id}
+                            >
+                              <Trash2 className="w-3 h-3 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Dropdown for friends beyond 5 */}
+                      {friends.length > 5 && (
+                        <Button
+                          variant="outline"
+                          className="w-full text-xs h-8"
+                          onClick={() => setShowAllFriends(!showAllFriends)}
+                        >
+                          <ChevronDown className={`w-3 h-3 mr-1 transition-transform ${showAllFriends ? 'rotate-180' : ''}`} />
+                          {showAllFriends ? 'Hide' : `Show ${friends.length - 5} more`}
+                        </Button>
+                      )}
+
+                      {/* Show additional friends when dropdown is open */}
+                      {showAllFriends && friends.length > 5 && (
+                        <div className="space-y-2 max-h-40 overflow-y-auto border-t pt-2">
+                          {friends.slice(5).map((friend) => (
+                            <div
+                              key={friend.id}
+                              className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary transition-colors group"
+                            >
+                              <div 
+                                className="flex-1 min-w-0 flex items-center gap-2 cursor-pointer"
+                                onClick={() => {
+                                  handleViewFriendProfile(friend);
+                                  setShowFriendsModal(false);
+                                }}
+                              >
+                                <Avatar className="h-8 w-8 flex-shrink-0">
+                                  <AvatarImage src={friend.friendProfilePicture} />
+                                  <AvatarFallback className="text-xs">
+                                    {friend.friendName.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{friend.friendName}</p>
+                                  <p className="text-xs text-muted-foreground truncate">@{friend.friendStudentCode}</p>
+                                </div>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleRemoveFriend(friend.id, friend.friendName)}
+                                disabled={deletingFriendId === friend.id}
+                              >
+                                <Trash2 className="w-3 h-3 text-red-500" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Requests Tab */}
+            <TabsContent value="requests" className="space-y-3">
+              {pendingRequests.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No pending friend requests</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {pendingRequests.map((request) => (
+                    <Card key={request.id} className="p-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={request.friendProfilePicture} />
+                          <AvatarFallback className="text-xs">
+                            {request.friendName.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{request.friendName}</p>
+                          <p className="text-xs text-muted-foreground truncate">@{request.friendStudentCode}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => handleAcceptRequest(request.id)}
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleRejectRequest(request.id)}
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>

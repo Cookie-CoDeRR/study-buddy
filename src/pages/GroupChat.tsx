@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,10 +21,12 @@ import { Users } from 'lucide-react';
 
 export function GroupChat() {
   const { groupId } = useParams<{ groupId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = auth.currentUser?.uid || '';
   const userName = auth.currentUser?.displayName || 'User';
   const userEmail = auth.currentUser?.email;
+  const tabFromUrl = searchParams.get('tab') || 'friends';
 
   const [group, setGroup] = useState<StudyGroup | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -43,6 +45,7 @@ export function GroupChat() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(tabFromUrl);
 
   // Load groups list when no groupId
   useEffect(() => {
