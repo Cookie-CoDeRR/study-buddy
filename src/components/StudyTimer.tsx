@@ -112,16 +112,10 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
   };
 
   const toggleMode = () => {
-    if (isRunning) {
-      toast({
-        title: "Stop the timer first",
-        description: "Please stop the current session before switching modes.",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsRunning(false);
     setIsBreak(!isBreak);
     setSeconds(0);
+    setSessionStart(null);
   };
 
   const applyPreset = (minutes: number, isStudy: boolean) => {
