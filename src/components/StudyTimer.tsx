@@ -157,6 +157,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
         <div className="flex items-center justify-center gap-3 pt-4">
           {!isRunning ? (
             <Button
+              type="button"
               onClick={handleStart}
               size="lg"
               className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-smooth hover:scale-105 active:scale-95"
@@ -167,6 +168,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
           ) : (
             <>
               <Button
+                type="button"
                 onClick={handlePause}
                 size="lg"
                 variant="outline"
@@ -176,6 +178,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
                 Pause
               </Button>
               <Button
+                type="button"
                 onClick={handleStop}
                 size="lg"
                 variant="destructive"
@@ -189,6 +192,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
         </div>
 
         <Button
+          type="button"
           onClick={toggleMode}
           variant="ghost"
           className="text-muted-foreground hover:text-foreground transition-smooth hover-glow"
@@ -202,6 +206,7 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
             {POMODORO_PRESETS.map((preset) => (
               <Button
                 key={preset.label}
+                type="button"
                 onClick={() => applyPreset(preset.minutes, preset.isStudy)}
                 disabled={isRunning}
                 variant={

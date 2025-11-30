@@ -505,7 +505,9 @@ const Index = () => {
                   <Button
                     variant="outline"
                     className="w-full rounded-lg border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-900 dark:text-amber-100 animate-pulse"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setShowFriendsModal(true);
                       setFriendsModalTab('requests');
                     }}
@@ -551,7 +553,9 @@ const Index = () => {
                 <Button
                   variant="outline"
                   className="w-full rounded-lg border-primary/20 hover:bg-primary/5"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setShowFriendsModal(true);
                     setFriendsModalTab('manage');
                   }}
