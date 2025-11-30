@@ -290,8 +290,8 @@ export function GroupChat() {
   // Show group chat view if groupId is selected
   if (group && groupId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-2 pb-40">
-        <div className="mx-auto space-y-2 px-1">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 p-2 pb-6 md:pb-2">
+        <div className="space-y-2 px-1 lg:px-4">
           {/* Header */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -356,23 +356,6 @@ export function GroupChat() {
                 />
               </TabsContent>
             </Tabs>
-          </Card>
-
-          {/* Group Info Footer */}
-          <Card className="p-2 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                  {group.name}
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  Created by {group.creatorName}
-                </p>
-              </div>
-              <Badge variant="secondary" className="text-xs">
-                {group.description}
-              </Badge>
-            </div>
           </Card>
         </div>
       </div>

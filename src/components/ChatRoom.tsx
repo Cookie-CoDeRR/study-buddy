@@ -147,7 +147,7 @@ export function ChatRoom({
 
                     <div className={`flex gap-2 items-end ${isOwn ? 'flex-row-reverse' : ''}`}>
                       <div
-                        className={`px-3 md:px-4 py-2 md:py-3 rounded-2xl text-sm md:text-base transition-all duration-200 ${
+                        className={`px-3 md:px-4 py-2 md:py-2 rounded-2xl text-sm md:text-base transition-all duration-200 ${
                           isOwn
                             ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-br-none shadow-lg'
                             : 'bg-secondary dark:bg-secondary/80 text-foreground rounded-bl-none shadow-sm border border-border/30'

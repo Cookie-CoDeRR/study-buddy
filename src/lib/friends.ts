@@ -478,3 +478,59 @@ export async function sendFriendRequestByUserId(
     throw error;
   }
 }
+
+/**
+ * Get friend profile details including bio and study streak
+ */
+export async function getFriendProfileDetails(friendUserId: string): Promise<{
+  name: string;
+  profilePicture?: string;
+  bio?: string;
+  currentStreak: number;
+  totalTodayMinutes: number;
+  studentCode: string;
+}> {
+  try {
+    // Get profile info
+    const profileRef = doc(db, 'profiles', friendUserId);
+    const profileSnap = await getDoc(profileRef);
+
+    if (!profileSnap.exists()) {
+      throw new Error('Friend profile not found');
+    }
+
+    const profileData = profileSnap.data();
+
+    // Get streak info
+    const streakRef = doc(db, 'streaks', friendUserId);
+    const streakSnap = await getDoc(streakRef);
+    const streakData = streakSnap.exists() ? streakSnap.data() : null;
+
+    // Get today's study time
+    const today = new Date().toISOString().split('T')[0];
+    const historyQ = query(
+      collection(db, 'study_history'),
+      where('userId', '==', friendUserId),
+      where('date', '==', today)
+    );
+    const historySnap = await getDocs(historyQ);
+    let totalTodayMinutes = 0;
+
+    historySnap.forEach((doc) => {
+      const data = doc.data();
+      totalTodayMinutes += data.minutes || 0;
+    });
+
+    return {
+      name: profileData.full_name || 'Unknown User',
+      profilePicture: profileData.profile_picture_url,
+      bio: profileData.bio || '',
+      currentStreak: streakData?.currentStreak || 0,
+      totalTodayMinutes,
+      studentCode: profileData.student_code || '',
+    };
+  } catch (error) {
+    console.error('Error getting friend profile details:', error);
+    throw error;
+  }
+}

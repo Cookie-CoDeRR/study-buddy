@@ -5,14 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { UserPlus, Check, X, Flame } from 'lucide-react';
+import { UserPlus, Check, X, Flame, Clock } from 'lucide-react';
 import { 
   sendFriendRequest, 
   getPendingRequests, 
   acceptFriendRequest, 
   rejectFriendRequest,
   getUserFriends,
+  getFriendProfileDetails,
   Friend,
 } from '@/lib/friends';
 import { auth } from '@/integrations/firebase/client';
@@ -28,6 +30,9 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [friendDetails, setFriendDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   const loadFriends = async () => {
     setLoading(true);
@@ -53,6 +58,24 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
     loadFriends();
     loadPendingRequests();
   }, [userId]);
+
+  const handleViewFriendProfile = async (friend: Friend) => {
+    setSelectedFriend(friend);
+    setLoadingDetails(true);
+    try {
+      const details = await getFriendProfileDetails(friend.friendUserId);
+      setFriendDetails(details);
+    } catch (error) {
+      console.error('Error loading friend details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load friend profile',
+        variant: 'destructive',
+      });
+      setSelectedFriend(null);
+    }
+    setLoadingDetails(false);
+  };
 
   const handleAddFriend = async () => {
     if (!studentCode.trim()) {
@@ -165,7 +188,8 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
               {friends.map((friend) => (
                 <Card
                   key={friend.id}
-                  className="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors md-elevate"
+                  className="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors md-elevate cursor-pointer"
+                  onClick={() => handleViewFriendProfile(friend)}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <Avatar className="h-10 w-10">
@@ -244,6 +268,86 @@ export function FriendsManager({ userId }: FriendsManagerProps) {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Friend Profile Modal */}
+      <Dialog open={!!selectedFriend} onOpenChange={(open) => !open && setSelectedFriend(null)}>
+        <DialogContent className="w-full max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Friend Profile</DialogTitle>
+            <DialogDescription>
+              View your friend's profile and stats
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingDetails ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : selectedFriend && friendDetails ? (
+            <div className="space-y-4">
+              {/* Profile Picture */}
+              <div className="flex justify-center">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={friendDetails.profilePicture} />
+                  <AvatarFallback className="text-2xl">
+                    {friendDetails.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Name and Student Code */}
+              <div className="text-center">
+                <h2 className="text-xl font-bold">{friendDetails.name}</h2>
+                <p className="text-sm text-gray-500">@{friendDetails.studentCode}</p>
+              </div>
+
+              {/* Bio */}
+              {friendDetails.bio && (
+                <Card className="p-3 bg-gray-50 dark:bg-gray-800/50">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {friendDetails.bio}
+                  </p>
+                </Card>
+              )}
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Streak */}
+                <Card className="p-3 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Streak
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {friendDetails.currentStreak}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {friendDetails.currentStreak === 1 ? 'day' : 'days'}
+                  </p>
+                </Card>
+
+                {/* Today's Study Time */}
+                <Card className="p-3 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Today
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {friendDetails.totalTodayMinutes}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    minutes
+                  </p>
+                </Card>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

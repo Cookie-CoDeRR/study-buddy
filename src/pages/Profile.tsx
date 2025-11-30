@@ -5,11 +5,13 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Save, Copy, Check } from "lucide-react";
 import { ProfilePictureUploader } from "@/components/ProfilePictureUploader";
 import { uploadProfilePicture, deleteProfilePicture } from "@/lib/storage";
+import { compressImage } from "@/lib/image-compression";
 import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
@@ -17,6 +19,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
   const [loading, setLoading] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const navigate = useNavigate();
@@ -45,6 +48,7 @@ const Profile = () => {
         setProfile(data);
         setFullName(data.full_name || "");
         setPhone(data.phone || "");
+        setBio(data.bio || "");
       }
     } catch (error) {
       toast({
@@ -68,6 +72,7 @@ const Profile = () => {
       await setDoc(docRef, {
         full_name: fullName.trim() || null,
         phone: phone.trim() || null,
+        bio: bio.trim() || null,
       }, { merge: true });
 
       toast({
@@ -91,7 +96,15 @@ const Profile = () => {
     if (!user) throw new Error('User not authenticated');
 
     console.log('Profile upload started for user:', user.uid);
-    const url = await uploadProfilePicture(user.uid, file);
+    
+    // Compress the image before uploading
+    const compressedBlob = await compressImage(file, 512, 512, 0.8);
+    const compressedFile = new File([compressedBlob], file.name, {
+      type: 'image/jpeg',
+      lastModified: file.lastModified,
+    });
+    
+    const url = await uploadProfilePicture(user.uid, compressedFile);
     console.log('Upload successful, URL:', url);
 
     // Save the URL to the profile
@@ -244,6 +257,22 @@ const Profile = () => {
                   />
                   <p className="text-xs text-muted-foreground">
                     Include country code (e.g., +1)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio (Optional)</Label>
+                  <Textarea
+                    id="bio"
+                    placeholder="Tell your friends about yourself..."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    maxLength={160}
+                    className="border-border/50 resize-none"
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {bio.length}/160 characters
                   </p>
                 </div>
 

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LogOut, Copy, Check, User as UserIcon, BarChart3, Users, Menu, X, Loader2, Flame, Clock } from "lucide-react";
 import StudyTimer from "@/components/StudyTimer";
 import SubjectManager from "@/components/SubjectManager";
 import StudyHistory from "@/components/StudyHistory";
@@ -15,7 +16,7 @@ import StreakDisplay from "@/components/StreakDisplay";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useToast } from "@/hooks/use-toast";
 import { calculateStreak } from "@/lib/streak";
-import { getUserFriends, Friend } from "@/lib/friends";
+import { getUserFriends, Friend, getFriendProfileDetails } from "@/lib/friends";
 
 interface Subject {
   id: string;
@@ -29,6 +30,9 @@ const Index = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [friendDetails, setFriendDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -57,6 +61,24 @@ const Index = () => {
     } catch (error) {
       console.error('Error loading friends:', error);
     }
+  };
+
+  const handleViewFriendProfile = async (friend: Friend) => {
+    setSelectedFriend(friend);
+    setLoadingDetails(true);
+    try {
+      const details = await getFriendProfileDetails(friend.friendUserId);
+      setFriendDetails(details);
+    } catch (error) {
+      console.error('Error loading friend details:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load friend profile',
+        variant: 'destructive',
+      });
+      setSelectedFriend(null);
+    }
+    setLoadingDetails(false);
   };
 
   const generateStudentCode = async (): Promise<string> => {
@@ -391,7 +413,8 @@ const Index = () => {
                     {friends.slice(0, 5).map((friend) => (
                       <div
                         key={friend.id}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/5 transition-colors"
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/5 transition-colors cursor-pointer"
+                        onClick={() => handleViewFriendProfile(friend)}
                       >
                         <Avatar className="h-10 w-10 border-2 border-primary/20">
                           <AvatarImage src={friend.friendProfilePicture} />
@@ -427,6 +450,86 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Friend Profile Modal */}
+      <Dialog open={!!selectedFriend} onOpenChange={(open) => !open && setSelectedFriend(null)}>
+        <DialogContent className="w-full max-w-sm animate-in fade-in zoom-in-50 duration-500">
+          <DialogHeader>
+            <DialogTitle>Friend Profile</DialogTitle>
+            <DialogDescription>
+              View your friend's profile and stats
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingDetails ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+            </div>
+          ) : selectedFriend && friendDetails ? (
+            <div className="space-y-4">
+              {/* Profile Picture - Pop in with bounce */}
+              <div className="flex justify-center animate-in zoom-in-50 bounce duration-700">
+                <Avatar className="h-24 w-24 shadow-xl ring-4 ring-primary/20">
+                  <AvatarImage src={friendDetails.profilePicture} />
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-accent text-white">
+                    {friendDetails.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Name and Student Code - Slide up with pop */}
+              <div className="text-center animate-in fade-in slide-in-from-bottom-6 duration-500 delay-200">
+                <h2 className="text-xl font-bold">{friendDetails.name}</h2>
+                <p className="text-sm text-gray-500">@{friendDetails.studentCode}</p>
+              </div>
+
+              {/* Bio */}
+              {friendDetails.bio && (
+                <Card className="p-3 bg-gray-50 dark:bg-gray-800/50 animate-in fade-in scale-95 duration-500 delay-300">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {friendDetails.bio}
+                  </p>
+                </Card>
+              )}
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Streak */}
+                <Card className="p-3 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 animate-in fade-in zoom-in-50 duration-600 delay-400 hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame className="w-4 h-4 text-orange-500 animate-pulse" />
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Streak
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {friendDetails.currentStreak}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {friendDetails.currentStreak === 1 ? 'day' : 'days'}
+                  </p>
+                </Card>
+
+                {/* Today's Study Time */}
+                <Card className="p-3 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 animate-in fade-in zoom-in-50 duration-600 delay-500 hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      Today
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {friendDetails.totalTodayMinutes}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    minutes
+                  </p>
+                </Card>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
