@@ -208,27 +208,11 @@
   transform: scale(1.08);
 }
 
-/* Wavy circular progress animation */
-@keyframes wave {
-  0% {
-    transform: translateY(0px);
-  }
-  25% {
-    transform: translateY(-2px);
-  }
-  50% {
-    transform: translateY(0px);
-  }
-  75% {
-    transform: translateY(2px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.wave-animate {
-  animation: wave 3s ease-in-out infinite;
+/* Static sea snake wavy pattern */
+.sea-snake-wave {
+  /* Static pattern - no animation */
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Circular progress fill animation */

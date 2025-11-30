@@ -192,34 +192,37 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
         <div className="relative flex items-center justify-center py-12">
           {/* Circular Progress Indicator */}
           {presetDurationMinutes ? (
-            <div className="relative w-80 h-96 flex items-center justify-center">
+            <div className="relative w-96 h-full flex items-center justify-center" style={{ minHeight: '500px' }}>
               <svg 
-                className="absolute w-full h-full" 
-                viewBox="0 0 200 280"
+                className="absolute" 
+                viewBox="0 0 250 380"
+                width="350"
+                height="500"
                 style={{ 
                   transform: 'rotate(-45deg)',
                 }}
               >
-                {/* Background arc (270 degrees, centered) */}
+                {/* Background arc (270 degrees, larger radius) */}
                 <path
-                  d="M 100 20 A 80 80 0 1 1 20 100"
+                  d="M 125 10 A 115 115 0 1 1 10 125"
                   fill="none"
                   stroke={isBreak ? '#22c55e20' : '#3b82f620'}
-                  strokeWidth="6"
+                  strokeWidth="8"
                   strokeLinecap="round"
                 />
                 
-                {/* Progress arc with wavy effect */}
+                {/* Progress arc with sea snake wavy pattern (static) */}
                 <path
-                  d="M 100 20 A 80 80 0 1 1 20 100"
+                  d="M 125 10 A 115 115 0 1 1 10 125"
                   fill="none"
                   stroke={isBreak ? '#22c55e' : '#3b82f6'}
-                  strokeWidth="6"
+                  strokeWidth="8"
                   strokeLinecap="round"
-                  className="wave-animate transition-all duration-1000"
+                  className="sea-snake-wave transition-all duration-1000"
                   style={{
-                    strokeDasharray: `${628.32 * (getProgressPercentage() / 100)} 628.32`,
-                    filter: 'drop-shadow(0 0 6px ' + (isBreak ? '#22c55e80' : '#3b82f680') + ')',
+                    strokeDasharray: `8 12`,
+                    strokeDashoffset: 0,
+                    filter: 'drop-shadow(0 0 8px ' + (isBreak ? '#22c55e80' : '#3b82f680') + ')',
                   }}
                 />
               </svg>
