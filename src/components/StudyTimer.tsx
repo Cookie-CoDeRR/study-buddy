@@ -189,34 +189,37 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
           </h3>
         </div>
 
-        <div className="relative flex items-center justify-center py-8">
+        <div className="relative flex items-center justify-center py-12">
           {/* Circular Progress Indicator */}
           {presetDurationMinutes ? (
-            <div className="relative w-64 h-64 flex items-center justify-center">
-              <svg className="absolute inset-0 w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
-                {/* Background circle */}
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="100"
+            <div className="relative w-80 h-96 flex items-center justify-center">
+              <svg 
+                className="absolute w-full h-full" 
+                viewBox="0 0 200 280"
+                style={{ 
+                  transform: 'rotate(-45deg)',
+                }}
+              >
+                {/* Background arc (270 degrees, centered) */}
+                <path
+                  d="M 100 20 A 80 80 0 1 1 20 100"
                   fill="none"
                   stroke={isBreak ? '#22c55e20' : '#3b82f620'}
-                  strokeWidth="8"
+                  strokeWidth="6"
+                  strokeLinecap="round"
                 />
-                {/* Progress circle with wavy effect */}
-                <circle
-                  cx="50%"
-                  cy="50%"
-                  r="100"
+                
+                {/* Progress arc with wavy effect */}
+                <path
+                  d="M 100 20 A 80 80 0 1 1 20 100"
                   fill="none"
                   stroke={isBreak ? '#22c55e' : '#3b82f6'}
-                  strokeWidth="8"
-                  strokeDasharray="628.32"
-                  strokeDashoffset={628.32 * (1 - getProgressPercentage() / 100)}
+                  strokeWidth="6"
                   strokeLinecap="round"
                   className="wave-animate transition-all duration-1000"
                   style={{
-                    filter: 'drop-shadow(0 0 8px ' + (isBreak ? '#22c55e60' : '#3b82f660') + ')',
+                    strokeDasharray: `${628.32 * (getProgressPercentage() / 100)} 628.32`,
+                    filter: 'drop-shadow(0 0 6px ' + (isBreak ? '#22c55e80' : '#3b82f680') + ')',
                   }}
                 />
               </svg>
