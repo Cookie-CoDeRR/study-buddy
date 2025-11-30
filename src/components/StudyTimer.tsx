@@ -181,11 +181,15 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
         </div>
 
         <div className="relative">
-          <div className="text-7xl font-bold text-timer-text font-mono tracking-tight transition-smooth">
+          <div className={`text-7xl font-bold font-mono tracking-tight transition-smooth ${
+            isBreak ? 'text-green-500' : 'text-timer-text'
+          }`}>
             {formatTime(seconds)}
           </div>
           {isRunning && (
-            <div className="absolute -inset-4 bg-timer-text/5 rounded-2xl blur-xl animate-pulse" />
+            <div className={`absolute -inset-4 rounded-2xl blur-xl animate-pulse ${
+              isBreak ? 'bg-green-500/5' : 'bg-timer-text/5'
+            }`} />
           )}
         </div>
 
