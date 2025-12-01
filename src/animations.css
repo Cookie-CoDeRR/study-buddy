@@ -215,6 +215,59 @@
   stroke-linejoin: round;
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  /* Reduce animations on mobile for better performance */
+  .animate-slide-up,
+  .animate-float,
+  .animate-pulse-glow {
+    animation-duration: 0.3s;
+  }
+
+  /* Optimize touch targets to minimum 44x44px */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent zoom on double tap */
+  input, button, textarea, select {
+    font-size: 16px;
+  }
+
+  /* Improve scrolling performance */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover {
+    transform: none;
+  }
+
+  .hover-lift:hover {
+    transform: none;
+  }
+
+  .hover-scale:hover {
+    transform: none;
+  }
+
+  /* Add active state feedback instead */
+  button:active {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+
+  /* Slightly larger buttons for touch */
+  button {
+    padding: 12px 16px;
+  }
+}
+
 /* Circular progress fill animation */
 @keyframes fillProgress {
   0% {

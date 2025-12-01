@@ -176,34 +176,34 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
   };
 
   return (
-    <Card className="p-8 bg-gradient-to-br from-timer-bg to-card border-border/50 shadow-xl hover-lift md-elevate transition-smooth animate-slide-up">
-      <div className="text-center space-y-6">
-        <div className="flex items-center justify-center gap-3 mb-4">
+    <Card className="p-4 md:p-8 bg-gradient-to-br from-timer-bg to-card border-border/50 shadow-xl hover-lift md-elevate transition-smooth animate-slide-up">
+      <div className="text-center space-y-4 md:space-y-6">
+        <div className="flex items-center justify-center gap-2 md:gap-3 mb-2 md:mb-4">
           {isBreak ? (
-            <Coffee className="h-6 w-6 text-timer-accent animate-float" />
+            <Coffee className="h-5 md:h-6 w-5 md:w-6 text-timer-accent animate-float" />
           ) : (
-            <div className="h-6 w-6 rounded-full bg-timer-text animate-pulse-glow" />
+            <div className="h-5 md:h-6 w-5 md:w-6 rounded-full bg-timer-text animate-pulse-glow" />
           )}
-          <h3 className="text-xl font-semibold text-foreground transition-smooth">
+          <h3 className="text-lg md:text-xl font-semibold text-foreground transition-smooth">
             {isBreak ? "Break Time" : subjectName || "Study Session"}
           </h3>
         </div>
 
-        <div className="relative flex items-center justify-center py-12">
+        <div className="relative flex items-center justify-center py-6 md:py-12 w-full overflow-hidden">
           {/* Circular Progress Indicator */}
           {presetDurationMinutes ? (
-            <div className="relative flex items-center justify-center" style={{ width: '500px', height: '500px' }}>
+            <div className="relative flex items-center justify-center" style={{ width: 'min(100vw - 40px, 500px)', height: 'min(100vw - 40px, 500px)', maxWidth: '500px', maxHeight: '500px' }}>
               <svg 
                 className="absolute" 
                 viewBox="0 0 400 400"
-                width="500"
-                height="500"
                 style={{ 
                   transform: 'rotate(-45deg)',
                   top: '50%',
                   left: '50%',
-                  marginTop: '-250px',
-                  marginLeft: '-250px',
+                  marginTop: 'calc(-50%)',
+                  marginLeft: 'calc(-50%)',
+                  width: '100%',
+                  height: '100%',
                 }}
               >
                 {/* Background arc (270 degrees, large radius) */}
@@ -233,20 +233,20 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
 
               {/* Center content */}
               <div className="relative text-center z-10">
-                <div className={`text-6xl font-bold font-mono tracking-tight transition-smooth ${
+                <div className={`text-4xl md:text-6xl font-bold font-mono tracking-tight transition-smooth ${
                   isBreak ? 'text-green-500' : 'text-timer-text'
                 }`}>
                   {formatTime(seconds)}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 uppercase tracking-widest">
+                <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2 uppercase tracking-widest">
                   {presetDurationMinutes}m {isBreak ? 'Break' : 'Session'}
                 </p>
               </div>
             </div>
           ) : (
             /* Standard timer display when no preset */
-            <div className="relative py-12">
-              <div className={`text-7xl font-bold font-mono tracking-tight transition-smooth ${
+            <div className="relative py-6 md:py-12">
+              <div className={`text-5xl md:text-7xl font-bold font-mono tracking-tight transition-smooth ${
                 isBreak ? 'text-green-500' : 'text-timer-text'
               }`}>
                 {formatTime(seconds)}
@@ -260,15 +260,15 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-3 pt-4">
+        <div className="flex items-center justify-center gap-2 md:gap-3 pt-2 md:pt-4 flex-wrap">
           {!isRunning ? (
             <Button
               type="button"
               onClick={handleStart}
-              size="lg"
-              className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-smooth hover:scale-105 active:scale-95"
+              size="sm"
+              className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-smooth hover:scale-105 active:scale-95 h-9 md:h-10 px-4 md:px-6"
             >
-              <Play className="mr-2 h-5 w-5" />
+              <Play className="mr-1 md:mr-2 h-4 md:h-5 w-4 md:w-5" />
               Start
             </Button>
           ) : (
@@ -276,21 +276,21 @@ const StudyTimer = ({ subjectId, subjectName, userId }: StudyTimerProps) => {
               <Button
                 type="button"
                 onClick={handlePause}
-                size="lg"
+                size="sm"
                 variant="outline"
-                className="border-primary/20 hover:bg-primary/5"
+                className="border-primary/20 hover:bg-primary/5 h-9 md:h-10 px-3 md:px-5"
               >
-                <Pause className="mr-2 h-5 w-5" />
+                <Pause className="mr-1 md:mr-2 h-4 md:h-5 w-4 md:w-5" />
                 Pause
               </Button>
               <Button
                 type="button"
                 onClick={handleStop}
-                size="lg"
+                size="sm"
                 variant="destructive"
-                className="shadow-lg shadow-destructive/20"
+                className="shadow-lg shadow-destructive/20 h-9 md:h-10 px-3 md:px-5"
               >
-                <Square className="mr-2 h-5 w-5" />
+                <Square className="mr-1 md:mr-2 h-4 md:h-5 w-4 md:w-5" />
                 Stop & Save
               </Button>
             </>

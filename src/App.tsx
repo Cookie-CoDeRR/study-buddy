@@ -80,7 +80,7 @@ const App = () => {
       window.history.replaceState(
         null,
         null,
-        basename + '/' + newUrl
+        basename + newUrl
       );
     }
   }, [basename]);
